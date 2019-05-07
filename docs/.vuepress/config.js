@@ -1,6 +1,6 @@
 
 module.exports = {
-  title: '皮卡丘的MVVM框架',
+  title: 'MVVM框架集',
   base: '/MVVMDoc/', // 设置站点根目录
   description: '飘飘乎如遗世独立 羽化而登仙',
   head: [
@@ -20,25 +20,39 @@ module.exports = {
         items: [
           {
             text: 'Vue基础知识',
-            link: '/MVVM/Vue/Basics/'
+            link: '/MVVM/Vue/basic/'
           }
         ]
       },
       { 
         text: 'React',
-        link: '/MVVM/React'
+        items: [
+          {
+            text: 'React基础知识',
+            link: '/MVVM/React/basic/'
+          }
+        ]
       }
     ],
     sidebar: {
-      '/MVVM/Vue/Basics/': [
+      '/MVVM/Vue/basic/': [
         {
           title: 'Vue相关知识',
           collapsable: false,
           children: [
-            '/MVVM/Vue/Basics/'
+            '/MVVM/Vue/basic/'
           ]
         }
-      ]
+      ],
+      '/MVVM/React/basic/': [
+        {
+          title: 'React相关知识',
+          collapsable: false,
+          children: [
+            '/MVVM/React/basic/'
+          ]
+        }
+      ],
     },
     repo: 'facebook201/MVVMDoc', // github 地址
     docsRepo: 'facebook201/MVVMDoc',
