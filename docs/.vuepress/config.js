@@ -32,6 +32,15 @@ module.exports = {
             link: '/MVVM/React/basic/'
           }
         ]
+      },
+      { 
+        text: '源码相关',
+        items: [
+          {
+            text: 'underscore',
+            link: '/MVVM/Underscore/'
+          }
+        ]
       }
     ],
     sidebar: {
@@ -53,6 +62,15 @@ module.exports = {
           ]
         }
       ],
+      '/MVVM/Underscore/': [
+        {
+          title: '源码相关',
+          collapsable: false,
+          children: [
+            '/MVVM/Underscore/'
+          ]
+        }
+      ]
     },
     repo: 'facebook201/MVVMDoc', // github 地址
     docsRepo: 'facebook201/MVVMDoc',
