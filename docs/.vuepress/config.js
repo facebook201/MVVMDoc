@@ -32,6 +32,15 @@ module.exports = {
             link: '/MVVM/React/basic/'
           }
         ]
+      },
+      { 
+        text: '源码相关',
+        items: [
+          {
+            text: '源码相关',
+            link: '/MVVM/SourceCode/'
+          }
+        ]
       }
     ],
     sidebar: {
@@ -50,6 +59,15 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/React/basic/'
+          ]
+        }
+      ],
+      '/MVVM/SourceCode/': [
+        {
+          title: '源码相关',
+          collapsable: false,
+          children: [
+            '/MVVM/SourceCode/'
           ]
         }
       ],
