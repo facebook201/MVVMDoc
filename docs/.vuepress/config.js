@@ -21,6 +21,10 @@ module.exports = {
           {
             text: 'Vue基础知识',
             link: '/MVVM/Vue/basic/'
+          },
+          {
+            text: 'Vue全局设计',
+            link: '/MVVM/Vue/global/'
           }
         ]
       },
@@ -37,8 +41,8 @@ module.exports = {
         text: '源码相关',
         items: [
           {
-            text: 'underscore',
-            link: '/MVVM/Underscore/'
+            text: '源码相关',
+            link: '/MVVM/SourceCode/'
           }
         ]
       }
@@ -46,10 +50,22 @@ module.exports = {
     sidebar: {
       '/MVVM/Vue/basic/': [
         {
-          title: 'Vue相关知识',
+          title: 'Vue源码',
           collapsable: false,
           children: [
-            '/MVVM/Vue/basic/'
+            '/MVVM/Vue/basic/',
+            '/MVVM/Vue/basic/newvue.md'
+          ]
+        }
+      ],
+      '/MVVM/Vue/global/': [
+        {
+          title: 'Vue全局设计',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/global/',
+            '/MVVM/Vue/global/API.md',
+            '/MVVM/Vue/global/util.md'
           ]
         }
       ],
@@ -62,15 +78,15 @@ module.exports = {
           ]
         }
       ],
-      '/MVVM/Underscore/': [
+      '/MVVM/SourceCode/': [
         {
           title: '源码相关',
           collapsable: false,
           children: [
-            '/MVVM/Underscore/'
+            '/MVVM/SourceCode/'
           ]
         }
-      ]
+      ],
     },
     repo: 'facebook201/MVVMDoc', // github 地址
     docsRepo: 'facebook201/MVVMDoc',
