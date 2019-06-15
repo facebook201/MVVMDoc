@@ -21,6 +21,10 @@ module.exports = {
           {
             text: 'Vue基础知识',
             link: '/MVVM/Vue/basic/'
+          },
+          {
+            text: 'Vue源码',
+            link: '/MVVM/Vue/Code/'
           }
         ]
       },
@@ -50,6 +54,16 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/Vue/basic/'
+          ]
+        }
+      ],
+      '/MVVM/Vue/Code/': [
+        {
+          title: 'Vue源码',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/Code/',
+            '/MVVM/Vue/Code/New'
           ]
         }
       ],
