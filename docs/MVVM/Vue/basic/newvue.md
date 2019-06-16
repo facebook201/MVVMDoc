@@ -205,3 +205,230 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {}
 
 
 
+## 规范化props
+
+```javascript
+  normalizeProps(child, vm)
+  normalizeInject(child, vm)
+  normalizeDirectives(child)
+```
+
+上面代码是规范选项的，比如在vue里面props我们可以按照文档说法，可以传数组的字符串，也可以传对象；
+
+```javascript
+{
+    props: ['data', 'title']
+}
+// 或者
+{
+    props: {
+        data: {
+            type: Number,
+            default: 0 
+        }
+    }
+}
+```
+
+虽然说开发者提供了很灵活的传参，但是对vue内部来说不是好事，所以他要处理。将传进来的参数规范化。
+
+##### normalizeProps 
+
+```javascript
+function normalizeProps(options, vm) {
+  const props = options.props;
+  if (!props) return
+  const res = {};
+  let i, val, name;
+
+  if (Array.isArray(props)) {
+    i = props.length;
+    while(i--) {
+      val = props[i];
+      if (typeof val === 'string') {
+        // camelize 是将字符转成形如 myData 驼峰式的
+        name = camelize(val);
+        res[name] = { type: null };
+      } else if (process.env.NODE_ENV !== 'production') {
+        // 报警一个 告诉其当为数组形式的时候必须使用字符串
+      }
+    }
+  } else if (isPlainObject(props)) {
+    for (const key in props) {
+      val = props[key];
+      name = camelize(val);
+      res[name] = isPlainObject(val)
+        ? val
+        : { type: val }
+    }
+  } else if (process.env.NODE_ENV !== 'production') {
+    // 报警只能是对象或者数组 
+  }
+  options.props = res;
+}
+```
+
+最后就通过这个函数得到
+
+```javascript
+// props: ['data']
+{
+    props: {
+        data: {
+            type: null
+        }
+    }
+}
+// 
+{
+    props: {
+        data: Number,
+        data1: {
+            type: string,
+            default: ''
+        }
+    }
+}
+// 就会变成下面这样的
+{
+    props: {
+        data: {
+          type: Number  
+        },
+        data1: {
+            type: string,
+            default: ''
+        }
+    }
+}
+```
+
+
+
+## 规范化inject
+
+**子组件可以使用父组件通过provide提供给子组件的数据，在子组件里面使用inject选项注入数据**，
+
+可以写成两种形式 一种是数组 一种是对象
+
+```duijavascript
+// 数组
+['data', 'data1']
+// 规范成
+{
+  'data': { from: 'data' },
+  'data1': { from: 'data1' }  
+}
+
+// 对象
+inject: {
+  foo: {
+    default: '1'
+  }
+}
+```
+
+内部实现 规范化inject
+
+```javascript
+function normalizeInject (options: Object, vm: ?Component) {
+  const inject = options.inject
+  if (!inject) return
+  const normalized = options.inject = {}
+  if (Array.isArray(inject)) {
+    for (let i = 0; i < inject.length; i++) {
+      normalized[inject[i]] = { from: inject[i] }
+    }
+  } else if (isPlainObject(inject)) {
+    for (const key in inject) {
+      const val = inject[key]
+      normalized[key] = isPlainObject(val)
+        ? extend({ from: key }, val)
+        : { from: val }
+    }
+  } else if (process.env.NODE_ENV !== 'production') {
+    warn(
+      `Invalid value for option "inject": expected an Array or an Object, ` +
+      `but got ${toRawType(inject)}.`,
+      vm
+    )
+  }
+}
+```
+
+
+
+## 规范化directives
+
+针对指令里面的函数写法和对象写法规范成对象写法
+
+```javascript
+function normalizeDirectives (options: Object) {
+  const dirs = options.directives
+  if (dirs) {
+    for (const key in dirs) {
+      const def = dirs[key]
+      if (typeof def === 'function') {
+        dirs[key] = { bind: def, update: def }
+      }
+    }
+  }
+}
+//
+directives: {
+    test1: {
+        bind: function() {
+            
+        },
+        update: () {
+            
+        }  
+    }
+}
+```
+
+## 选项的合并
+
+上面的代码都是init里规范某些选项参数。下面的就是合并阶段，还是mergeOptions函数的代码
+
+```javascript
+const options = {}
+  let key
+  // parent 是一系列操作时候返回的对象 options
+  for (key in parent) {
+    mergeField(key)
+  }
+  for (key in child) {
+    if (!hasOwn(parent, key)) {
+      mergeField(key)
+    }
+  }
+  function mergeField (key) {
+    const strat = strats[key] || defaultStrat
+    options[key] = strat(parent[key], child[key], vm, key)
+  }
+  return options
+```
+
+这里会通过吧options遍历然后把key值都传给一个mergeField函数。key就是 `components`、`directives`、`filters` 以及 `_base`    mergeField函数只有两句代码，第一句定义了一个常量strat，它是通过制定的key访问 strats 对象得到。**strats是一个全局配置里面的optionMergeStrategies**
+
+***选项覆盖策略是处理如何将父选项值和子选项值合并到最终值的函数*。也就是说 `config.optionMergeStrategies` 是一个合并选项的策略对象，这个对象下包含很多函数，这些函数就可以认为是合并特定选项的策略。这样不同的选项使用不同的合并策略，如果你使用自定义选项，那么你也可以自定义该选项的合并策略，只需要在 `Vue.config.optionMergeStrategies` 对象上添加与自定义选项同名的函数就行。**
+
+
+
+## el、propsData的合并策略
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
