@@ -35,7 +35,9 @@
 </template>
 
 <script>
-import NavLink from '@default-theme/NavLink.vue'
+import qs from 'qs';
+import NavLink from '@default-theme/NavLink.vue';
+
 export default {
   components: { NavLink },
   computed: {
@@ -58,6 +60,11 @@ export default {
     }
   },
   mounted() {
+    let obj = {
+      name: 'java',
+      age: 25
+    };
+    console.log(qs.stringify(obj));
   }
 }
 </script>

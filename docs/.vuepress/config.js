@@ -23,8 +23,13 @@ module.exports = {
             link: '/MVVM/Vue/basic/'
           },
           {
+<<<<<<< HEAD
             text: 'Vue源码',
             link: '/MVVM/Vue/Code/'
+=======
+            text: 'Vue全局设计',
+            link: '/MVVM/Vue/global/'
+>>>>>>> ecc6db2599e8ea5f9bc918424168e67e2f008e7c
           }
         ]
       },
@@ -50,10 +55,22 @@ module.exports = {
     sidebar: {
       '/MVVM/Vue/basic/': [
         {
-          title: 'Vue相关知识',
+          title: 'Vue源码',
           collapsable: false,
           children: [
-            '/MVVM/Vue/basic/'
+            '/MVVM/Vue/basic/',
+            '/MVVM/Vue/basic/newvue.md'
+          ]
+        }
+      ],
+      '/MVVM/Vue/global/': [
+        {
+          title: 'Vue全局设计',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/global/',
+            '/MVVM/Vue/global/API.md',
+            '/MVVM/Vue/global/util.md'
           ]
         }
       ],
