@@ -23,13 +23,8 @@ module.exports = {
             link: '/MVVM/Vue/basic/'
           },
           {
-<<<<<<< HEAD
-            text: 'Vue源码',
-            link: '/MVVM/Vue/Code/'
-=======
             text: 'Vue全局设计',
             link: '/MVVM/Vue/global/'
->>>>>>> ecc6db2599e8ea5f9bc918424168e67e2f008e7c
           }
         ]
       },
