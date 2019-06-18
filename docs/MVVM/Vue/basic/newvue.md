@@ -416,7 +416,197 @@ const options = {}
 
 
 
-## el、propsData的合并策略
+## Data的合并策略
+
+在对data合并过程中，都是使用一个strats的对象作为其中的一部分，最后的返回会是一个函数。
+
+**因为函数返回的对象保证了每个组件实例都有一个唯一的数据副本，避免组件之间相互的影响，**
+
+
+
+### 初始化之后再合并数据？
+
+Vue初始化的时候， inject 和 props 两个选项的初始化是优先于data选项的，这样就可以使用 props初始化data的数据。
+
+```javascript
+const child = {
+  template: '<span></span>',
+  data() {
+    return {
+	  childData: this.parentData
+    }
+  },
+  props: ['parentData'],
+  created() {
+    console.log(this.childData)
+  }
+};
+
+var vm = new Vue({
+    el: '#app',
+    // 通过 props 向子组件传递数据
+    template: '<child parent-data="parent" />',
+    components: {
+      Child
+    }
+})
+```
+
+所以之所以在初始化合并数据 原因有两个
+
+1、props 初始化优先于data选项的初始化
+
+2、data 选项是在初始化的时候才求值 在初始化的时候才用mergeData进行数据合并
+
+
+
+#### 还可以这样传
+
+```javascript
+data (vm) {
+  return {
+    childData: vm.parentData
+  }
+}
+// 或者 解构赋值
+data ({ parentData }) {
+  return {
+    childData: parentData
+  }
+}
+```
+
+**data函数的参数就是当前实例对象，这个参数是在 mergeData里面传的**
+
+```javascript
+strats.data = function (parentVal, childVal, vm) {
+  if (!vm) {
+    if (childVal && typeof childVal !== 'function') {
+      // 
+      return parentVal;
+    }
+    return mergeDataOrFn(parentVal, childVal);
+  }
+  return mergeDataOrFn(parentVal, childVal, vm);
+}
+
+
+export function mergeDataOrFn (parentVal, childVal, vm) {
+  if (!vm) {
+    if (!childVal) {
+      return parentVal;
+    }
+    if (!parentVal) {
+      return childVal;
+    }
+    
+    return function mergeDataOrFn () {
+      return mergeData (
+        typeof childVal === 'function' ? childVal.call(this, this) : childVal,
+        typeof parentVal === 'function' ? parentVal.call(this, this) : parentVal
+      )
+    }
+  }
+}
+```
+
+
+
+## 生命周期钩子选项的合并策略
+
+```javascript
+// 生命周期钩子的合并
+function mergeHook (parentVal, childVal) {
+  return childVal
+    ? parentVal
+      ? parentVal.concat(childVal)
+      : Array.isArray(childVal)
+        ? childVal
+        : [childVal]
+    : parentVal
+}
+
+LIFECYCLE_HOOKS.forEach(hook => {
+  strats[hook] = mergeHook
+});
+
+// LIFECYCLE_HOOKS 是一个常量数组
+export const LIFECYCLE_HOOKS = [
+  'beforeCreate',
+  'created',
+  'beforeMount',
+  'mounted',
+  'beforeUpdate',
+  'updated',
+  'beforeDestroy',
+  'destroyed',
+  'activated',
+  'deactivated',
+  'errorCaptured'
+];
+```
+
+整个生命周期的选项都是通过一个mergeHook函数返回的
+
+```javascript
+return (是否有childVal， 判断组件中是否有对应名字的生命周期钩子函数)
+	？ 如果有childVal 则判断是否有parentVal
+    	? 如果有parentVal 则使用concat方法将二者合并为一个数组
+    	： 如果没有 parentVal 则判断 childVal是不是一个数组
+    		？ 如果childVal是一个数组则直接返回
+    		： 否则将其作为数组的元素，然后返回数组
+    ： 如果没有 childVal 则直接返回 parentVal；
+```
+
+从上面可以看出，经过mergeHook函数处理之后，组件选项的生命周期钩子函数被合并成一个数组。
+
+
+
+#### 选项处理小结
+
+- 对于 `el`、`propsData` 选项使用默认的合并策略 `defaultStrat`。
+- 对于 `data` 选项，使用 `mergeDataOrFn` 函数进行处理，最终结果是 `data` 选项将变成一个函数，且该函数的执行结果为真正的数据对象。
+- 对于 `生命周期钩子` 选项，将合并成数组，使得父子选项中的钩子函数都能够被执行
+- 对于 `directives`、`filters` 以及 `components` 等资源选项，父子选项将以原型链的形式被处理，正是因为这样我们才能够在任何地方都使用内置组件、指令等。
+- 对于 `watch` 选项的合并处理，类似于生命周期钩子，如果父子选项都有相同的观测字段，将被合并为数组，这样观察者都将被执行。
+- 对于 `props`、`methods`、`inject`、`computed` 选项，父选项始终可用，但是子选项会覆盖同名的父选项字段。
+- 对于 `provide` 选项，其合并策略使用与 `data` 选项相同的 `mergeDataOrFn` 函数。
+- 最后，以上没有提及到的选项都将使默认选项 `defaultStrat`。
+- 最最后，默认合并策略函数 `defaultStrat` 的策略是：*只要子选项不是 undefined 就使用子选项，否则使用父选项*。
+
+
+
+## mixin 和 extends
+
+```javascript
+if (child.mixins) {
+    for (let i = 0, l = child.mixins.length; i < l; i++ ) {
+        parent = mergeOptions(parent, child.mixins[i], vm);
+    }
+}
+```
+
+使用mergeOptions把mixins的选项合并。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

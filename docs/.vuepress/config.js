@@ -54,7 +54,8 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/Vue/basic/',
-            '/MVVM/Vue/basic/newvue.md'
+            '/MVVM/Vue/basic/newvue.md',
+            '/MVVM/Vue/basic/init.md'
           ]
         }
       ],
