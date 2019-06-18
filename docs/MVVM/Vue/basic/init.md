@@ -114,22 +114,208 @@ vm._isBeingDestroyed = false
 初始化事件代码
 
 ```javascript
+function initEvents (vm) {
+  // 添加两个属性 _events 和 _hasHookEvent
+  vm._events = Object.create(null);
+  vm._hasHookEvent = false;
+  
+  // _parentListeners 是来自 createComponentInstanceForVNode
+  const listeners = vm.$options._parentListeners;
+  if (listeners) {
+    updateComponentListeners(vm, listeners);
+  }
+}
 
+
+//  createComponentInstanceForVnode 创建子组件实例的时候添加的参数选项
+export function createComponentInstanceForVnode (
+  vnode: any, // we know it's MountedComponentVNode but flow doesn't
+  parent: any, // activeInstance in lifecycle state
+  parentElm?: ?Node,
+  refElm?: ?Node
+): Component {
+  const vnodeComponentOptions = vnode.componentOptions
+  const options: InternalComponentOptions = {
+    _isComponent: true,
+    parent,
+    propsData: vnodeComponentOptions.propsData,
+    _componentTag: vnodeComponentOptions.tag,
+    _parentVnode: vnode,
+    _parentListeners: vnodeComponentOptions.listeners,
+    _renderChildren: vnodeComponentOptions.children,
+    _parentElm: parentElm || null,
+    _refElm: refElm || null
+  }
+  // check inline-template render functions
+  const inlineTemplate = vnode.data.inlineTemplate
+  if (isDef(inlineTemplate)) {
+    options.render = inlineTemplate.render
+    options.staticRenderFns = inlineTemplate.staticRenderFns
+  }
+  return new vnodeComponentOptions.Ctor(options)
+}
 ```
 
 
 
+## initRender 
+
+```java
+  // 添加两个属性 子树的根 和 缓存树
+  vm._vnode = null;
+  vm._staticTrees = null;
+  const options = vm.$options;
+  const parentVnode = vm.$vnode = options._parentVnode;
+  const renderContext = parentVnode && parentVnode.context;
+  vm.$slot = resolveSlots(options._renderChildren, renderContext);
+  vm.$scopedSlots = emptyObject;
+```
+
+上面的代码都是添加一些属性到vm实例上， 以及如何解析 slot的。( 后面会说到 )
+
+```javascript
+  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
+  // normalization is always applied for the public version, used in
+  // user-written render functions.
+  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
+```
+
+这里添加了两个方法 _c 和$createElement,这两个函数都是对内部的createElement包装，写过render函数的都知道
+
+```javascript
+render(createElement) {
+  return createElement('h1', 'title');
+}
+// 或者
+render() {
+  return this.$createElement('h1', 'title');
+}
+```
+
+其中 _ c 和 createElement 函数时传递的第六个参数不同。
+
+```javascript
+  // $attrs & $listeners are exposed for easier HOC creation.
+  // they need to be reactive so that HOCs using them are always updated
+  // 为了更好的使用高阶组件 暴露$attrs 和 $listeners
+  // 他们需要被动响应 以便使用高阶组件能实时更新
+  const parentData = parentVnode && parentVnode.data
+
+  /* istanbul ignore else */
+  if (process.env.NODE_ENV !== 'production') {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
+    }, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$listeners is readonly.`, vm)
+    }, true)
+  } else {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, null, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, null, true)
+  }
+```
+
+关于 isUpdatingChildComponent 变量，根据引用的关系 从lifeCycle 文件里面发现这个变量
+
+```javascript
+// 定义 isUpdatingChildComponent，并初始化为 false
+export let isUpdatingChildComponent: boolean = false
+
+// 省略中间代码 ...
+
+export function updateChildComponent (
+  vm: Component,
+  propsData: ?Object,
+  listeners: ?Object,
+  parentVnode: MountedComponentVNode,
+  renderChildren: ?Array<VNode>
+) {
+  if (process.env.NODE_ENV !== 'production') {
+    isUpdatingChildComponent = true
+  }
+
+  // 省略中间代码 ...
+
+  // update $attrs and $listeners hash
+  // these are also reactive so they may trigger child update if the child
+  // used them during render
+  vm.$attrs = parentVnode.data.attrs || emptyObject
+  vm.$listeners = listeners || emptyObject
+
+  // 省略中间代码 ...
+
+  if (process.env.NODE_ENV !== 'production') {
+    isUpdatingChildComponent = false
+  }
+}
+```
+
+开始是默认false，只有执行 updateChildComponent函数之后才被更新为true，执行完之后又变成false，这是因为 updateChildComponent 需要更新实例对象 的 attrs 和 listeners属性，所以不需要提示 他们两个是只读属性。
 
 
 
+## 生命周期钩子的实现
+
+```javascript
+callHook(vm, 'beforeCreate')
+initInjections(vm) // resolve injections before data/props
+initState(vm)
+initProvide(vm) // resolve provide after data/props
+callHook(vm, 'created')
+```
+
+从lifeycle文件里面找到 callHook函数。
+
+```javascript
+export function callHook (vm: Component, hook: string) {
+  // #7573 disable dep collection when invoking lifecycle hooks
+  pushTarget()
+  // 这里的代码相当于 
+  // const handlers = vm.$options.created handlers会被合并成一个数组
+  const handlers = vm.$options[hook]
+  if (handlers) {
+    for (let i = 0, j = handlers.length; i < j; i++) {
+      try {
+        handlers[i].call(vm)
+      } catch (e) {
+        handleError(e, vm, `${hook} hook`)
+      }
+    }
+  }
+  // _hasHookEvent是在initEvent函数中定义的，它是判断是否存在生命周期钩子的事件侦听器，
+  if (vm._hasHookEvent) {
+    vm.$emit('hook:' + hook)
+  }
+  popTarget()
+}
+```
+
+initState包括了: initProps、initMethods、initData、initComputed、以及initWatch。所以在beforeCreate钩子中是无法使用的，只能在created里面使用，但是此时还没有任何的挂载操作，所以不能访问DOM，$el。
+
+**生命周期钩子的事件侦听器是监听组件相应生命周期事件** 其实Vue可以这样写
+
+```javascript
+<child
+	@hook:beforeCreate="handleChildBeforeCreate"
+	@hook:created="handleChildCreated">
+</child>
+```
+
+那么Vue是如何检测是否存在生命周期事件侦听器的？在Vue事件系统会有解释。
 
 
 
+## Vue的初始化之initState
 
+```javascript
+callHook(vm, 'beforeCreate')
+initInjections(vm) // resolve injections before data/props
+initState(vm)
+initProvide(vm) // resolve provide after data/props
+callHook(vm, 'created')
+```
 
-
-
-
+在initState函数执行之前，先执行initInjections 函数，也就是inject选项要更早被初始化。
 
 
 
