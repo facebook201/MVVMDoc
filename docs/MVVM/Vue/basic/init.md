@@ -315,7 +315,27 @@ initProvide(vm) // resolve provide after data/props
 callHook(vm, 'created')
 ```
 
-在initState函数执行之前，先执行initInjections 函数，也就是inject选项要更早被初始化。
+在initState函数执行之前，先执行initInjections 函数，也就是inject选项要更早被初始化。不过初始化inject选项涉及到了defineReactive函数，调用了 toggleObserving函数操作了用于控制是否应该转换为响应式属性的状态标识 observerState.shouldConvert，所以决定先initState。本身来说 inject/provide 选项是后来才添加的。
+```javascript
+export function initState(vm: Component) {
+  // _watchers 是用来存储组件的watcher对象 
+  vm._watchers = [];
+  const opts = vm.$options;
+  if (opts.props) initProps(vm, opts.props)
+  if (opts.methods) initMethods(vm, opts.methods)
+  // 存在对象就观测它 没有就观测一个空对象
+  if (opts.data) {
+    initData(vm)
+  } else {
+    observe(vm._data = {}, true /* 没有就设置根数据 */);
+  }
+  if (opts.computed) initComputed(vm, opts.computed);
+  if (opts.watch && opts.watch !== nativeWatch) {
+    initWatch(vm, opts.watch)
+  }
+}
+
+```
 
 
 
