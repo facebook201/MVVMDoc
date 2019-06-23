@@ -75,7 +75,6 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/Vue/global/',
-            '/MVVM/Vue/global/API.md',
             '/MVVM/Vue/global/util.md'
           ]
         }
