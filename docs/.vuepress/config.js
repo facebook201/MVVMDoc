@@ -45,7 +45,16 @@ module.exports = {
             link: '/MVVM/SourceCode/'
           }
         ]
-      }
+      },
+      { 
+        text: '数据结构和算法',
+        items: [
+          {
+            text: '数据结构',
+            link: '/MVVM/DataStructures/'
+          }
+        ]
+      },      
     ],
     sidebar: {
       '/MVVM/Vue/basic/': [
@@ -99,6 +108,16 @@ module.exports = {
           ]
         }
       ],
+      '/MVVM/DataStructures/': [
+        {
+          title: '数据结构',
+          collapsable: false,
+          children: [
+            '/MVVM/DataStructures/',
+            '/MVVM/DataStructures/binaryTree.md'
+          ]
+        }
+      ]
     },
     repo: 'facebook201/MVVMDoc', // github 地址
     docsRepo: 'facebook201/MVVMDoc',
