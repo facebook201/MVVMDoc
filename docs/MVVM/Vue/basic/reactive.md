@@ -476,3 +476,106 @@ const data = {
 ```
 
 这里的data.a 和 data.b 都有自己的Dep实例对象，都是用来收集哪些属于对应字段的依赖。
+
+
+
+## get 中收集依赖
+
+```javascript
+// get主要做两件事 
+// 第一件 正确的返回属性值
+// 第二件 收集依赖
+get: function reactiveGetter() {
+      const value = getter ? getter.call(obj) : val;
+      if (Dep.target) {
+        // depend就是收集依赖
+        dep.depend();
+        if (childOb) {
+          childOb.dep.depend();
+          // Vue处理对象和函数的方式是不同的 所以数组每个元素的依赖搜集要逐个处理
+          if (Array.isArray(value)) {
+            dependArray(value);
+          }
+        }
+      }
+      return value;
+    }
+```
+
+首先保存getter，getter是常量保存的属性原有的get函数，如果存在就直接调用该函数，否则就是要val作为属性值。Dep.target 中保存的值就是要被收集的依赖( 观察者 )。所以如果Dep.target 存在的话 说明有依赖需要被收集，这个时候才需要执行 if 语句块内的代码。
+
+
+
+然后判断childOb是否存在，如果存在就执行childOb.dep.depend()。先来看看childOb是什么？
+
+```javascript
+// 在observe里
+  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    // 如果存在 __ob__ 属性 表示Observer 已经有实例了 返回这个实例就好了 避免重复观察
+    ob = value.__ob__
+  }
+```
+
+let childOb = !shallow && observe(val)。在观测对象的函数里，childOb是observe的返回值。从上面的函数可以看到ob就是函数的返回值，所以 **childOb === data.a.\__ob__** 所以 childOb.dep.depend 意思是将相同的依赖收集到 data.a.\__obj__.dep 里，**收集两个依赖的意义是两个依赖的触发时机不同，作用不同**
+
+* 第一个 dep (a)
+* 第二个 childOb.dep (data.a.\__ob__)
+
+第一个的触发时机是a被修改的时候触发，在set里面触发 dep.notify()。第二个是给 Vue.set给对象添加新属性时触发。
+
+```javascript
+    Vue.set = function (obj, key, val) {
+      defineReactive(obj, key, val);
+      // 相当于data.a.__ob__.dep.notify()
+      obj.__obj__.dep.notify();
+    };
+
+    Vue.set(data.a, 'value', 1);
+```
+
+所以 `__ob__` 属性以及 `__ob__.dep` 的主要作用是为了添加、删除属性时有能力触发依赖，而这就是 `Vue.set` 或 `Vue.delete` 的原理。
+
+
+
+## set 函数中如何触发依赖
+
+get函数用于收集依赖，set函数用于触发依赖。
+
+```javascript
+set: function reactiveSetter (newVal) {
+  const value = getter ? getter.call(obj) : val
+  /* eslint-disable no-self-compare */
+  if (newVal === value || (newVal !== newVal && value !== value)) {
+    return
+  }
+  /* eslint-enable no-self-compare */
+  if (process.env.NODE_ENV !== 'production' && customSetter) {
+    customSetter()
+  }
+  if (setter) {
+    setter.call(obj, newVal)
+  } else {
+    val = newVal
+  }
+  // shallow 
+  childOb = !shallow && observe(newVal)
+  dep.notify()
+}
+```
+
+由于属性被设置了新的值，那么假如我们为属性设置的新值是一个数组或者纯对象，那么该数组或纯对象是未被观测的，所以需要对新值进行观测，这就是第一句代码的作用，同时使用新的观测对象重写 `childOb` 的值。当然了，这些操作都是在 `!shallow` 为真的情况下，即需要深度观测的时候才会执行。最后是时候触发依赖了，我们知道 `dep` 是属性用来收集依赖的”筐“，现在我们需要把”筐“里的依赖都执行一下，而这就是 `dep.notify()` 的作用。
+
+
+
+### 数组变异方法的思路
+
+数组里面有很多方法是会改变原来自身的值，`push`、`pop`、`shift`、`unshift`、`splice`、`sort` 以及 `reverse` 等。当用户调用这些变异方法改变数组时需要触发依赖。换句话说我们需要知道开发者何时调用了这些变异方法，只有这样我们才有可能在这些方法被调用时做出反应。
+
+![border](https://raw.githubusercontent.com/facebook201/MVVMDoc/master/img/arrayMethod.png)
+
+
+
+
+
+
+
