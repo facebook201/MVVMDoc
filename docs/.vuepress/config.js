@@ -25,6 +25,10 @@ module.exports = {
           {
             text: 'Vue全局设计',
             link: '/MVVM/Vue/global/'
+          },
+          {
+            test: 'Vue的工具函数',
+            link: '/MVVM/Vue/utils/'
           }
         ]
       },
@@ -114,6 +118,15 @@ module.exports = {
           children: [
             '/MVVM/DataStructures/',
             '/MVVM/DataStructures/binaryTree.md'
+          ]
+        }
+      ],
+      '/MVVM/Vue/utils/': [
+        {
+          title: '工具函数',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/utils/'
           ]
         }
       ]

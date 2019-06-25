@@ -573,9 +573,104 @@ set: function reactiveSetter (newVal) {
 
 ![border](https://raw.githubusercontent.com/facebook201/MVVMDoc/master/img/arrayMethod.png)
 
+```javascript
+function def (obj, key, val, enumerable) {
+  Object.defineProperty(obj, key, {
+    value: val,
+    enumerable: !!enumerable,
+    writable: true,
+    configurable: true
+  })
+}
+
+const arrayMethods = Object.create(Array.prototype);
+const arrayProto = Array.prototype;
+
+const methodsToPatch = [
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'reverse'
+];
+
+methodsToPatch.forEach(function(method) {
+  // 缓存原数组的方法
+  const original = arrayProto[method];
+	
+  def(arrayMethods, method, function mutator (...args) {
+    // 把变异方法的返回值赋值给result。 最后返回result，这样保证了拦截函数与数组原本变异方法的功能是一致的
+    const result = original.apply(this, args);
+    
+    // 这里的this就是实例本身。 __ob__.dep 中收集了所有该对象的依赖(观察者)。
+    // 所以修改数组之后 会改变数组 所以需要把所有依赖拿出来执行 更新一遍
+    const ob = this.__ob__;
+    let inserted;
+
+    switch (method) {
+      case 'push':
+      case 'unshift':
+        inserted = args;
+        break;
+      case 'splice':
+        inserted = args.slice(2);
+        break;
+    }
+
+    if (inserted) ob.observeArray(inserted);
+
+    ob.dep.notify();
+    return result;
+  });
+});
+```
+
+arrayMethods 对象的原型是真正的数组构造函数的原型，methodsToPatch常量是一个数组，包含了所有需要拦截的数组变异方法名字，通过def函数给arrayMethods对象上定义与数组相同的方法，从而做到拦截的目的。
+
+def的函数在arrayMethods上定义与数组变异方法同名的函数。
+
+```javascript
+  Object.defineProperty(obj, key, {
+    value: arrayMethod[method], // value相当于是个函数
+    enumerable: false,
+    writable: true,
+    configurable: true
+  })
+```
+
+这里的obj相当于是 arrayMethods。当去调用变异方法的时候就通过原本的方法来返回，然后去更新依赖。
+
+**所有新增的元素都不是响应式的，需要把新增的元素拿出来调用observeArray对其进行观测。**
+
+```javascript
+if (inserted) ob.observeArray(inserted);
+```
 
 
 
+### copyAugment不支持\__proto__
 
+```javascript
+function copyAugment(target, src, keys) {
+  for (let i = 0, l = keys.length; i < l; i++) {
+    const key = keys[i];
+    def(target, key, src[key]);
+  }
+```
 
+copyAugment 函数的第三个参数keys就是定义在 arrayMethods对象上的所有函数的键，通过for循环使用def函数在数组上定义与数组变异方法相同的不可枚举的函数。**上面两个方法都是把数组实例与代理原型或与代理原型中的函数联系起来 来达到拦截数组变异方法。**
+
+```javascript
+    if (Array.isArray(value)) {
+      const augment = hasProto
+        ? protoAugment
+        : copyAugment
+      augment(value, arrayMethods, arrayKeys)
+      this.observeArray(value)
+    } else {
+      this.walk(value)
+    }
+```
 
