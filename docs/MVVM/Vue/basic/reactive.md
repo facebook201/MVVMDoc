@@ -638,7 +638,14 @@ def的函数在arrayMethods上定义与数组变异方法同名的函数。
     writable: true,
     configurable: true
   })
+// augment(value, arrayMethods, arrayKeys)
+// IE11下 target 是内部的数组实例，key是方法名 src[key]就是 代理的对象 继承真正的数组
+def(target, key, src[key]);
 ```
+
+**这里的代码就是说，如果我们访问a.push(1) 首先回去找到arrayMethods.push(1),然后再去找到def里面缓存的真正的方法，执行相应的代码，同时把增加的动作的依赖更新一下。**
+
+
 
 这里的obj相当于是 arrayMethods。当去调用变异方法的时候就通过原本的方法来返回，然后去更新依赖。
 
@@ -673,4 +680,165 @@ copyAugment 函数的第三个参数keys就是定义在 arrayMethods对象上的
       this.walk(value)
     }
 ```
+
+然后开始看 observeArray方法的作用，如果数据数组里面嵌套里数组，那么他们却不是响应式的，所以需要递归观测那些类型。通过循环每个数组元素，然后observe(items[i]);
+
+
+
+## 数组的特殊性
+
+在get函数里面，收集依赖的时候，数组会单独处理
+
+```javascript
+if (Array.isArray(value)) {
+  dependArray(value);
+}
+//
+arr: [
+  { a: 1}
+]
+```
+
+**简单来说这里是为了给数组里面更加复杂的对象收集依赖的**
+
+```javascript
+function dependArray(value) {
+  for (let i = 0, l = value.length; i < l; i++) {
+    // 循环遍历 获得每一个元素，如果该元素拥有 __ob__ 和 __ob__.dep 对象 那么说明这个元素也是一个对象或数组 然后手动执行 __ob__.dep.depend() 收集依赖。
+    e = value[i];
+    e && e.__ob__ && e.__ob.__.dep.depend();
+    if (Array.isArray(e)) {
+      dependArray(e);
+    }
+  }
+}
+```
+
+**数组的索引是非响应式的，跟对象不同。对象只要逐个将对象的属性重新定义为访问器属性，并且当属性的值同样为纯对象时进行递归定义 但是数组对处理就是通过拦截数组变异方法的方式。** 下面的方法触发不了响应式
+
+```javascript
+const vm = new Vue({
+  data: {
+    arr: [1, 2]
+  }
+})
+
+vm.arr[0] = 3; // 这样操作是无效的 索引是非响应式的
+```
+
+对于数组来说，索引不是访问器属性，所以当有观察者依赖数组的某一个元素是触发不了这个元素的get函数的，所以就收集不到依赖。
+
+
+
+## Vue.set 和 Vue.delete
+
+Vue是无法拦截到一个对象或数组添加元素的能力，所以增加了 set 和 delete，同时也在实例上实现这两个方法。在源码 ' src/core/instance/state.js ' 的 stateMixin 函数中。
+
+```javascript
+function stateMixin(Vue) {
+  const dataDef = {};
+  dataDef.get = function () { return this._data };
+  const propsDef = {};
+  propsDef.get = function () { return this._props };
+
+  Object.defineProperty(Vue.prototype, '$data', dataDef);
+  Object.defineProperty(Vue.prototype, '$props', propsDef);
+
+  Vue.prototype.$set = set;
+  Vue.prototype.$delete = del;
+
+  Vue.prototype.$watch = function (
+    expOrFn: string | Function,
+    cb: any,
+    options?: Object
+  ): Function {
+    // 一般第二个参数传一个函数 例如 function(newVal, val){  }
+    // 也可以穿一个对象 里面包含handler属性 属性值作为回调
+    const vm: Component = this
+    if (isPlainObject(cb)) {
+      return createWatcher(vm, expOrFn, cb, options)
+    }
+    // 如果是回调函数
+    options = options || {}
+    options.user = true
+    // 创建一个Watcher实例对象
+    const watcher = new Watcher(vm, expOrFn, cb, options)
+    // immediate选项用来在属性或函数被侦听后立即执行回调 
+    // 如果 immediate 为真
+    if (options.immediate) {
+      // watcher.value 是 watch处理之后 this.getter() 返回的值 也就是被观察属性的值
+      cb.call(vm, watcher.value)
+    }
+    // 返回一个函数 这个函数如果执行就解除当前观察者对属性的观察 它的原理是通过调用观察者实例对象
+    return function unwatchFn () {
+      watcher.teardown()
+    }
+  }
+}
+```
+
+set 和 del 的定义在initGlobalAPI里面，
+
+```javascript
+function initGlobalAPI(Vue) {
+  Vue.set = set;
+  Vue.delete = del;
+}
+```
+
+
+
+### \$set 和 $delete
+
+```javascript
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    target.length = Math.max(target.length, key);
+    target.splice(key, 1, val);
+    return val;
+  }
+```
+
+上面的代码是通过splice利用了替换元素的能力，将指定位置元素的值替换为新值。同时由于splice方法本身是能够触发响应的。而且处理了数组索引的值，防止设置的元素的索引大于数组的长度。
+
+
+
+```javascript
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val;
+    return val;
+  }
+```
+
+如果不是数组，就走对象的判断。但是看到有两个条件要满足
+
+* key要在target的原型链上
+* 但是不能再object.prototype 上
+
+[这个issue](https://github.com/vuejs/vue/issues/6845)
+
+
+
+```javascript
+  const ob = target.__ob__;
+	// 如果不存在
+	
+	// 不能在根数据添加属性
+  if (target._isVue || (ob && ob.vmCount)) {
+    // process.env.NODE_ENV !== 'production' && warn(
+      // 'Avoid adding reactive properties to a Vue instance or its root $data ' +
+      // 'at runtime - declare it upfront in the data option.'
+    return val
+  }
+
+  if (!ob) {
+    target[key] = val;
+    return val;
+  }
+  defineReact(ob.value, key, val);
+  ob.dep.notify();
+```
+
+ob它是数据对象 `__ob__` 属性的引用。第二句高亮的代码使用 `defineReactive` 函数设置属性值，这是为了保证新添加的属性是响应式的。第三句高亮的代码调用了 `__ob__.dep.notify()` 从而触发响应。这就是添加全新属性触发响应的原理。
+
+**对于根数据的Observer实例对象，想要在根数据上使用set是不想的，因为data根数据自己本身就不是响应式的。**
 

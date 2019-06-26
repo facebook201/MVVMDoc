@@ -69,7 +69,8 @@ module.exports = {
             '/MVVM/Vue/basic/',
             '/MVVM/Vue/basic/newvue.md',
             '/MVVM/Vue/basic/init.md',
-            '/MVVM/Vue/basic/reactive.md'
+            '/MVVM/Vue/basic/reactive.md',
+            '/MVVM/Vue/basic/observe.md'
           ]
         }
       ],
@@ -126,7 +127,8 @@ module.exports = {
           title: '工具函数',
           collapsable: false,
           children: [
-            '/MVVM/Vue/utils/'
+            '/MVVM/Vue/utils/',
+            '/MVVM/Vue/utils/shared.md'
           ]
         }
       ]
@@ -144,4 +146,7 @@ module.exports = {
     }
   }
 };
+
+
+
 
