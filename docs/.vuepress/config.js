@@ -27,8 +27,8 @@ module.exports = {
             link: '/MVVM/Vue/global/'
           },
           {
-            test: 'Vue的工具函数',
-            link: '/MVVM/Vue/utils/'
+            test: 'Vue的模板AST详解',
+            link: '/MVVM/Vue/AST/'
           }
         ]
       },
@@ -49,16 +49,7 @@ module.exports = {
             link: '/MVVM/SourceCode/'
           }
         ]
-      },
-      { 
-        text: '数据结构和算法',
-        items: [
-          {
-            text: '数据结构',
-            link: '/MVVM/DataStructures/'
-          }
-        ]
-      },      
+      }    
     ],
     sidebar: {
       '/MVVM/Vue/basic/': [
@@ -70,7 +61,9 @@ module.exports = {
             '/MVVM/Vue/basic/newvue.md',
             '/MVVM/Vue/basic/init.md',
             '/MVVM/Vue/basic/reactive.md',
-            '/MVVM/Vue/basic/observe.md'
+            '/MVVM/Vue/basic/observe.md',
+            '/MVVM/Vue/basic/initProps.md',
+            '/MVVM/Vue/basic/parse.md'
           ]
         }
       ],
@@ -109,16 +102,6 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/SourceCode/'
-          ]
-        }
-      ],
-      '/MVVM/DataStructures/': [
-        {
-          title: '数据结构',
-          collapsable: false,
-          children: [
-            '/MVVM/DataStructures/',
-            '/MVVM/DataStructures/binaryTree.md'
           ]
         }
       ],

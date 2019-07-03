@@ -105,7 +105,7 @@ if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
 **观察者模式是非常常用的设计模式** 举个简单的例子。
 如果你要去买房，你朋友张三也要去买房，还有隔壁王二麻子也要买房。你们几个都是观察者，而卖房子的就是被观察者。你们订阅了一些信息之后，就不要管任何事情了，有消息被观察者买房子的就会通知你。这样就完成了解耦，因为你不需要一致去看，有消息被观察者就通知你。这个模式又叫发布订阅模式，你是订阅者，他是发布者。只不过发布订阅存在一个中间调度，你们两个不直接沟通而已。
 
- 
+
 ```javascript
 // 渲染函数的观察者
 new Watcher(vm, updateComponent, noop, {
@@ -252,20 +252,173 @@ if (this.computed) {
 
 ## 依赖收集的过程
 
+```javascript
+get () {
+  pushTarget(this)
+  let value
+  const vm = this.vm
+  try {
+    value = this.getter.call(vm, vm)
+  } catch (e) {
+    if (this.user) {
+      handleError(e, vm, `getter for watcher "${this.expression}"`)
+    } else {
+      throw e
+    }
+  } finally {
+    // "touch" every property so they are all tracked as
+    // dependencies for deep watching
+    if (this.deep) {
+      traverse(value)
+    }
+    popTarget()
+    this.cleanupDeps()
+  }
+  return value
+}
+```
+
+get 是我们遇到的第一个观察者对象的实例方法，它的作用就是 求值 。求值的目的有两个，第一个是能够触发访问器属性的get拦截器函数，第二个是能够获得被观察目标的值。**触发访问器属性的get函数是依赖收集的关键。**
+
+get 方法上来就调用 pushTarget(this) 函数，并将当前观察者实例对象作为参数传递。
+
+```javascript
+class Dep { }
+
+Dep.target = null;
+const targetStack = [];
+
+function pushTarget (_target: ?Watcher) {
+  if (Dep.target) targetStack.push(Dep.target);
+  Dep.target = _target;
+}
+
+function popTarget () {
+  Dep.target = targetStack.pop();
+}
+```
+
+Dep 是每个响应式属性来收集属于自身依赖的“筐”。这个筐就是 Dep类的实例对象。 Dep有一个属性 target，pushTarget函数的作用就是用来给Dep.target 属性赋值的，pushTarget函数会将接收到的参数赋值给Dep.target属性。这个参数就是调用该函数的观察者对象。多以 Dep.target保存的是观察者对象，这个观察者对象就是要收集的目标。
 
 
 
 
 
+### 看个例子
+
+```html
+<div id="demo">
+  <p>
+    {{ name }}
+  </p>
+</div>
+```
+
+这个上面的模板会被编译成如下的渲染函数：这个函数是一个匿名函数
+
+```javascript
+function anonymous() {
+  with (this) {
+    return _c('div',
+      { attrs: {"id": "demo"} },
+      [_v("\n  " + _s(name) + "\n  ")]
+    )
+  } 
+}
+```
+
+这里在渲染函数里面执行会读取name的值，就会触发name属性的get拦截器函数。
+
+```javascript
+get: function reactiveGetter () {
+  const value = getter ? getter.call(obj) : val
+  if (Dep.target) {
+    dep.depend()
+    if (childOb) {
+      childOb.dep.depend()
+      if (Array.isArray(value)) {
+        dependArray(value)
+      }
+    }
+  }
+  return value
+}
+```
+
+这是get的拦截器。首先判断了 `Dep.target` 是否存在，如果存在则调用 `dep.depend` 方法收集依赖，那么Dep.target是否存在呢？在Watcher的constructor里面最后有代码
+
+```javascript
+if (this.computed) {
+    this.value = undefined;
+    this.dep = new Dep();
+} else {
+  // 这里会初始化Watcher的时候执行了get函数 
+  this.value = this.get();
+}
+```
+
+这个函数的执行就意味着对被观察目标的求值，并将得到的值赋值给 `value` 变量，而且我们可以看到 `this.get` 方法的最后将 `value` 返回。所以pushTarget要在第一行代码推入this（观察者实例对象）。然后就调用depend方法收集。
+
+```javascript
+  // 收集依赖
+  depend () {
+    // 这里再做一次判断是因为 Dep.target不仅仅在get函数里面用到了 
+    if (Dep.target) {
+      Dep.target.addSub(this);
+    }
+  }
+```
+
+`depend` 方法内部其实并没有真正的执行收集依赖的动作，而是调用了观察者实例对象的 `addDep` 方法：`Dep.target.addDep(this)`，并以当前 `Dep` 实例对象作为参数。
+
+```javascript
+  addDep (dep: Dep) {
+    const id = dep.id;
+    // newDepIds 就是用来看是否重复收集依赖的 里面都是存的 dep 筐的id
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id);
+      this.newDeps.push(dep);
+      // 如果depIds 没有id 就收集 观察者 watcher到dep这个筐里面 收集依赖
+      if (!this.depIds.has(id)) {
+        dep.addSub(this);
+      }
+    }
+  }
+```
+
+看看addSub的函数。
+
+```javascript
+addSub (sub: Watcher) {
+  this.subs.push(sub)
+}
+```
+
+addSub 接收的是一个观察者对象，将最新的watcher 添加到dep的subs数组中。
+
+```javascript
+if (!this.depIds.has(id)) {
+  dep.addSub(this);
+}
+```
+
+这里的depIds属性用来避免在一次求值的过程中收集重复的依赖，其实depIds属性是用来 **多次求值** 中避免重复收集依赖的，多次求值是指当数据变化时重新求值的过程，每次一求值之后 newDepIds属性都会被清空，也就是说每次重新求值的时候对于观察者实例对象来说 newDepIds属于始终是全新的。每次在清空之前会把 newDepIds属性的值以及newDeps属性的值赋值给 depIds和 deps 属性，这样重新求值的时候 depIds属性和deps属性将会保存着上一次求值中newDepIds 属性以及 newDeps属性的值。**在get方法里面 finally语句块调用了观察者对象的 cleanupDeps方法，每次求值完之后 都会使用depIds属性和deps属性保存newDepIds属性和newDeps属性的值。**
+
+
+#### cleanupDeps
+这个是用来移除废弃的观察者，对上一次求值收集到的Dep对象进行遍历，然后循环检查上一次求值所收集到的Dep实例对象是否存在当前这次求值所收集到的Dep实例对象中，不存在就说明Dep对象已经和该观察者不存在依赖关系。
 
 
 
 
+##  异步更新队列
 
 
+## $watch 和 watch 的实现
 
 
+## 深度观测的实现
 
-
+## 计算属性的实现
 
 
