@@ -49,7 +49,16 @@ module.exports = {
             link: '/MVVM/SourceCode/'
           }
         ]
-      }    
+      },
+      { 
+        text: 'TypeScript',
+        items: [
+          {
+            text: 'TypeScript',
+            link: '/MVVM/TSC/'
+          }
+        ]
+      },
     ],
     sidebar: {
       '/MVVM/Vue/basic/': [
@@ -112,6 +121,15 @@ module.exports = {
           children: [
             '/MVVM/Vue/utils/',
             '/MVVM/Vue/utils/shared.md'
+          ]
+        }
+      ],
+      '/MVVM/TSC/': [
+        {
+          title: 'TypeScript',
+          collapsable: false,
+          children: [
+            '/MVVM/TSC/'
           ]
         }
       ]
