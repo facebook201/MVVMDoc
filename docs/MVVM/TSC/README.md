@@ -1,4 +1,4 @@
-# TypeScript的简介
+# TypeScript
 
 ## 简介
 TypeScript 是 JavaScript类型的超集，可以编译成 JavaScript。可以在任何浏览器、任何操作系统上运行。
@@ -68,6 +68,7 @@ x[6] = true; // Error 不是两个类型中的一个
 
 ### 枚举
 枚举是对JavaScript数据类型的补充，可以为一组数值赋予友好的名字。
+**枚举类型用于取值被限定在一定场景，比如一周七天，彩虹的颜色等， 枚举的成员会被赋值为从0开始递增的数字。**
 ```typescript
   enum Name { 'Tom', 'Jack' }
   let currName: Name = Name.Tom;
@@ -80,7 +81,36 @@ x[6] = true; // Error 不是两个类型中的一个
   enum Name { 'Tom' = 1, 'Jack' = 4 }
   let currName: Name = Name[4];
   console.log(currName); // Jack
+
+// 
+enum Days {Sun, Mon, Tue, Wed, Thu, Fri, Sat};
+let day: Days = Days.Sun;
+console.log(day === 0); // true
+
+// 代码会编译成这样
+var Days;
+(function (Days) {
+    Days[Days["Sun"] = 0] = "Sun";
+    Days[Days["Mon"] = 1] = "Mon";
+    Days[Days["Tue"] = 2] = "Tue";
+    Days[Days["Wed"] = 3] = "Wed";
+    Days[Days["Thu"] = 4] = "Thu";
+    Days[Days["Fri"] = 5] = "Fri";
+    Days[Days["Sat"] = 6] = "Sat";
+})(Days || (Days = {}));
 ```
+
+### 手动赋值
+```typescript
+enum Days {Sun = 7, Mon = 1, Tue, Wed, Thu, Fri, Sat};
+
+console.log(Days["Sun"] === 7); // true
+console.log(Days["Mon"] === 1); // true
+console.log(Days["Tue"] === 2); // true
+console.log(Days["Sat"] === 6); // true
+```
+
+
 
 ### Any
 有时候，我们会想要为那些在编程阶段还不清楚类型的变量指定一个类型。 这些值可能来自于动态的内容，比如来自用户输入或第三方代码库。 这种情况下，我们不希望类型检查器对这些值进行检查而是直接让它们通过编译阶段的检查。 那么我们可以使用 any类型来标记这些变量
@@ -118,6 +148,172 @@ let strLen: number = (<string>someValue).length;
 let strLen: number = (someValue as string).length; 
 ```
 
+### 未声明类型的变量
+变量如果在声明的时候，未指定其类型，那么它会被识别为任意值类型。
+```typescript
+let something;
+something = 'seven';
+something = 7;
+```
+### 联合类型
+联合类型（Union Types）表示取值可以为多种类型中的一种。联合类型使用 | 分隔每个类型。这里的 let myFavoriteNumber: string | number 的含义是，允许 myFavoriteNumber 的类型是 string 或者 number，但是不能是其他类型。
+```typescript
+let myFavoriteNumber: string | number;
+myFavoriteNumber = 'seven';
+myFavoriteNumber = 7;
+```
 
-## 变量声明
+**联合类型的属性和方法**
+当不能确定联合类型的变量是哪一个，我们只能访问此联合类型的所有类型里的共有属性或方法:
+```typescript
+function getLength(something: string | number): number {
+    return something.length;
+}
+// index.ts(2,22): error TS2339: Property 'length' does not exist on type 'string | number'.
+//   Property 'length' does not exist on type 'number'.
+function getString(something: string | number): string {
+    return something.toString();
+}
 
+let myFavoriteNumber: string | number;
+myFavoriteNumber = 'seven';
+console.log(myFavoriteNumber.length); // 5
+myFavoriteNumber = 7;
+console.log(myFavoriteNumber.length); // 编译时报错
+// index.ts(5,30): error TS2339: Property 'length' does not exist on type 'number'.
+```
+## 对象类型
+
+### 接口 Interface
+在TS里面，除了可用于**对类的一部分行为进行抽象，常用于对象描述**
+```typescript
+interface Person {
+  name: string,
+  age: number
+}
+
+let tom: Person = {
+  name: 'zhangsan',
+  age: 23
+};
+```
+定义了接口Person，**变量tom的类型是Person，这样tom要跟Person保持一致。不能多属性也不能少属性。必须保持一致**
+
+### 可选属性
+有时候不要完全匹配一个形状。表示可用不存在这个属性，但是不能添加未定义的熟悉
+```typescript
+interface Person {
+    name: string;
+    age?: number;
+}
+
+let tom: Person = {
+    name: 'Tom'
+};
+```
+
+### 任意属性
+```typescript
+interface Person {
+  name: string;
+  age?: number;
+  [propName: string]: any;
+}
+
+let tom: Person = {
+  name: 'Tom',
+  gender: 'male'
+};
+```
+
+**一旦定义了任意属性，那么确定属性和可选属性的类型都必须是它的类型的子集:** 
+```typescript
+interface Person {
+  name: string;
+  age?: number;
+  [propName: string]: string;
+}
+let tom: Person = {
+  name: 'Tom',
+  age: 25,
+  gender: 'male'
+};
+// index.ts(3,5): error TS2411: Property 'age' of type 'number' is not assignable to string index type 'string'.
+// index.ts(7,5): error TS2322: Type '{ [x: string]: string | number; name: string; age: number; gender: string; }' is not assignable to type 'Person'.
+//   Index signatures are incompatible.
+//     Type 'string | number' is not assignable to type 'string'.
+//       Type 'number' is not assignable to type 'string'.
+```
+
+### 只读属性
+有时候希望对象的一些字段只能在创建的时候被赋值，不能改变，可以使用readonly 定义只读属性，**注意，只读的约束存在于第一次给对象赋值的时候，而不是第一次给只读属性赋值的时候**
+```typescript
+interface Person {
+    readonly id: number;
+    name: string;
+    age?: number;
+    [propName: string]: any;
+}
+let tom: Person = {
+    id: 89757,
+    name: 'Tom',
+    gender: 'male'
+};
+tom.id = 9527;
+// 不能给id赋值了 因为id是只读的属性
+```
+
+### 函数类型
+一个函数有输入和输出，TS对其进行约束，需要把输入和输出考虑到，其中函数声明的类型定义较为简单。
+**注意，输入多余的（或者少于要求的）参数，是不被允许的，可选参数使用?:表示，但是可选参数必须在必须参数后面。**
+```typescript
+function sum(x: number, y: number): number {
+    return x + y;
+}
+// 可选参数
+function buildName(firstName: string, lastName?: string) {
+    if (lastName) {
+        return firstName + ' ' + lastName;
+    } else {
+        return firstName;
+    }
+}
+let tomcat = buildName('Tom', 'Cat');
+let tom = buildName('Tom');
+```
+
+### 默认参数
+在ES6中 允许给函数的参数添加默认值，TypeScript 会将添加了默认值的参数识别为可选参数
+```typescript
+function buildName(firstName: string, lastName: string = 'Cat') {
+    return firstName + ' ' + lastName;
+}
+let tomcat = buildName('Tom', 'Cat');
+let tom = buildName('Tom');
+```
+
+### 剩余参数
+...ret 的方式获取函数中的剩余参数：items 是一个数组。所以我们可以用数组的类型来定义它.**rest 参数只能是最后一个参数**
+```typescript
+function push(array: any[], ...items: any[]) {
+    items.forEach(function(item) {
+        array.push(item);
+    });
+}
+
+let a = [];
+push(a, 1, 2, 3);
+```
+
+## 进阶部分
+
+### 类型别名
+类型别名用来给一个类型起一个新名字。一般用于
+```typescript
+type EventNames = 'click' | 'scroll' | 'mousemove';
+function handleEvent(ele: Element, event: EventNames) {
+  // do something
+}
+handleEvent(document.getElementById('hello'), 'scroll');  // 没问题
+handleEvent(document.getElementById('world'), 'dbclick'); // 报错，event 不能为 'dbclick'
+```
