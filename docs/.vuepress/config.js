@@ -38,6 +38,10 @@ module.exports = {
           {
             text: 'React基础知识',
             link: '/MVVM/React/basic/'
+          },
+          {
+            text: 'Redux',
+            link: '/MVVM/React/Redux/'
           }
         ]
       },
@@ -73,6 +77,15 @@ module.exports = {
             '/MVVM/Vue/basic/observe.md',
             '/MVVM/Vue/basic/initProps.md',
             '/MVVM/Vue/basic/parse.md'
+          ]
+        }
+      ],
+      '/MVVM/React/Redux/': [
+        {
+          title: 'Redux',
+          collapsable: false,
+          children: [
+            '/MVVM/React/Redux/'
           ]
         }
       ],
