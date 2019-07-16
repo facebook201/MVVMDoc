@@ -36,8 +36,12 @@ module.exports = {
         text: 'React',
         items: [
           {
-            text: 'React基础知识',
+            text: 'React',
             link: '/MVVM/React/basic/'
+          },
+          {
+            text: 'react-router',
+            link: '/MVVM/React/Router/'
           }
         ]
       },
@@ -56,6 +60,10 @@ module.exports = {
           {
             text: 'TypeScript',
             link: '/MVVM/TSC/'
+          },
+          {
+            text: 'TypeScript封装一个Axios',
+            link: '/MVVM/TSC/Axios/'
           }
         ]
       },
@@ -105,6 +113,15 @@ module.exports = {
           ]
         }
       ],
+      '/MVVM/React/Router/': [
+        {
+          title: 'Router相关',
+          collapsable: false,
+          children: [
+            '/MVVM/React/Router/'
+          ]
+        }
+      ],
       '/MVVM/SourceCode/': [
         {
           title: '源码相关',
@@ -132,6 +149,15 @@ module.exports = {
             '/MVVM/TSC/'
           ]
         }
+      ],
+      '/MVVM/TSC/Axios/': [
+        {
+          title: 'typescript封装axios',
+          collapsable: false,
+          children: [
+            '/MVVM/TSC/Axios/'
+          ]
+        }
       ]
     },
     repo: 'facebook201/MVVMDoc', // github 地址
@@ -147,6 +173,9 @@ module.exports = {
     }
   }
 };
+
+
+
 
 
 

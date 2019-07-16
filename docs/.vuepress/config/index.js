@@ -100,3 +100,31 @@ export function makeMap (
     : val => map[val];
 }
 
+
+
+
+import { BrowserRouter, Route } from 'react-router-dom';
+
+const PrimaryLayout = () => (
+  <div className="primary-layout">
+    <header>
+      Our React Router 4 App
+    </header>
+
+    <main>
+      <Route path="/" exact component={HomePage} />
+      <Route path="/users" exact component={UsersPage} />
+    </main>
+  </div>
+);
+
+const HomePage = () => <div>Home Page</div>;
+const UserPage = () => <div>Users Page</div>;
+
+const APP = () => (
+  <BrowserRouter>
+    <PrimaryLayout />
+  </BrowserRouter>
+);
+
+render(<App />, document.getElementById('root'));
