@@ -263,4 +263,34 @@ store.dispatch(setNameActionCreator('bob'))
 
 ## dispatch async action
 
+假设现在有一个场景：
+1) 用户点击 "Say Hi in 2 seconds 按钮"
+2) 当用户点击按钮A，我们希望经过两秒，视图显示一条消息 Hi。
+3) 两秒过去之后 视图更新 显示消息
 
+```javascript
+import { createStore, combineReducers } from 'redux';
+
+var reducer = combineReducers({
+  speaker: function(state = {}, action) {
+    switch(action.type) {
+      case 'SAY':
+        return {
+          ...state,
+          message: action.message
+        };
+        default:
+          return state;
+    }
+  }
+});
+
+var store = createStore(reducer);
+
+var sayActionCreator = function(message) {
+  return {
+    type: 'SAY',
+    message
+  };
+};
+```
