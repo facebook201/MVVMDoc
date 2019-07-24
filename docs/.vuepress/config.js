@@ -63,7 +63,7 @@ module.exports = {
         items: [
           {
             text: 'TypeScript',
-            link: '/MVVM/TSC/'
+            link: '/MVVM/TSC/typescript/'
           },
           {
             text: 'TypeScript封装一个Axios',
@@ -154,12 +154,12 @@ module.exports = {
           ]
         }
       ],
-      '/MVVM/TSC/': [
+      '/MVVM/TSC/typescript/': [
         {
           title: 'TypeScript',
           collapsable: false,
           children: [
-            '/MVVM/TSC/'
+            '/MVVM/TSC/typescript/'
           ]
         }
       ],
@@ -168,7 +168,8 @@ module.exports = {
           title: 'typescript封装axios',
           collapsable: false,
           children: [
-            '/MVVM/TSC/Axios/'
+            '/MVVM/TSC/Axios/',
+            '/MVVM/TSC/Axios/start.md'
           ]
         }
       ]

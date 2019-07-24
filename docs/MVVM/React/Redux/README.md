@@ -294,3 +294,126 @@ var sayActionCreator = function(message) {
   };
 };
 ```
+
+## middleware 中间件
+
+通常来说中间件是在某个应用中 A 和 B 部分中间的那一块，中间件可以把 A 发送数据到 B 的形式从 A ====> B,
+变成 A ---> middleware 1 ---> middleware 2 ---> middleware 3 --> ... ---> B。Redux 并不能自动处理 action creator 中返回的异步函数。如果在 action creator 和 reducer 之间增加一个中间件，就可以把这个函数转成适合Redux处理的内容。
+action ---> dispatcher ---> middleware 1 ---> middleware 2 ---> reducers。
+
+每当一个 action（或者其他诸如异步 action creator 中的某个函数）被分发时，我们的中间件就会被调用并且在需要的时候协助 action creator 分发真正的 action（或者什么都不做）
+
+在 Redux 中，中间件是纯粹的函数
+```javascript
+var anyMiddleware = function({ dispatch, getState }) {
+  return function(next) {
+    return function(action) {
+      // 中间件的业务代码
+    }
+  }
+}
+
+// 柯里化
+var thunkMiddleware = curry(
+  ({ dispatch, getState }, next, action) => (
+    // TODO
+  )
+)
+```
+**中间件由三个嵌套函数组成**
+
+* 1) 第一层向其他两层提供分发函数和getState函数 （因为中间件或者 ation creator 可能需要从state中读取数据）
+* 2) 第二层提供next函数，它允许你显式的将处理过的输入传递给下一个中间件或Redux
+* 3) 第三层提供上一个中间件或dispatch传过来的action，这个action可以调用一个中间件 或者 以想要的方式处理action。
+
+为异步 action creator 提供的中间件叫 thunk middleware
+```javascript
+var thunkMiddleware = function ({ dispatch, getState }) {
+    // console.log('Enter thunkMiddleware');
+    return function(next) {
+        // console.log('Function "next" provided:', next);
+        return function (action) {
+            // console.log('Handling action:', action);
+            return typeof action === 'function' ?
+                action(dispatch, getState) :
+                next(action)
+        }
+    }
+}
+```
+
+#### 辅助函数 applyMiddleware 然redux知道有一个或多个中间件
+applyMiddleware 接收所有中间件作为参数，返回一个供 Redux createStore 调用的函数。当最后这个函数被调用时，它会产生一个 Store 增强器，用来将所有中间件应用到 Store 的 dispatch 上。
+
+#### 如何应用？
+```javascript
+import { createStore, combineReducers, applyMiddleware } from 'redux'
+
+const finalCreateStore = applyMiddleware(thunkMiddleware)(createStore)
+// 针对多个中间件， 使用：applyMiddleware(middleware1, middleware2, ...)(createStore)
+
+var reducer = combineReducers({
+    speaker: function (state = {}, action) {
+        console.log('speaker was called with state', state, 'and action', action)
+        switch (action.type) {
+            case 'SAY':
+                return {
+                    ...state,
+                    message: action.message
+                }
+            default:
+                return state
+        }
+    }
+})
+
+const store_0 = finalCreateStore(reducer)
+```
+
+现在 store 的 middleware 已经准备好了，再来尝试分发我们的异步 action：
+
+```javascript
+var asyncSayActionCreator_1 = function (message) {
+    return function (dispatch) {
+        setTimeout(function () {
+            console.log(new Date(), 'Dispatch action now:')
+            dispatch({
+                type: 'SAY',
+                message
+            })
+        }, 2000)
+    }
+}
+
+function discardMiddleware ({ dispatch, getState }) {
+    return function(next) {
+        return function (action) {
+            console.log('discardMiddleware action received:', action)
+        }
+    }
+}
+const finalCreateStore = applyMiddleware(discardMiddleware, thunkMiddleware)(createStore);
+```
+通过使用 logMiddleware 或 discardMiddleware 试着修改上述的 finalCreateStore 调用,
+
+1) 我们知道怎样写 action 和 action creator
+2) 我们知道怎样分发 action
+3) 我们知道怎样使用中间件处理自定义 action，比如异步 action
+
+**如何订阅 state 的更新, 并响应这些更新（比如重新渲染我们的组件)**
+
+## state-subscriber
+没有下面的这个图，在 store 改变时我们就不能更新我们的视图。
+```javascript
+  _________      _________       ___________
+  |         |    | Change  |     |   React   |
+  |  Store  |----▶ events  |-----▶   Views   |
+  |_________|    |_________|     |___________|
+
+// 监视 Redux store 更新有一个很简单的办法：
+store.subscribe(function() {
+  // retrieve latest store state here
+  // Ex:
+  console.log(store.getState());
+})
+```
