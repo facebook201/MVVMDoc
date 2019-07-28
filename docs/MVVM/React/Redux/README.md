@@ -415,5 +415,36 @@ store.subscribe(function() {
   // retrieve latest store state here
   // Ex:
   console.log(store.getState());
+});
+
+import { createStore, combineReducers } from 'redux'
+
+var itemsReducer = function (state = [], action) {
+    switch (action.type) {
+        case 'ADD_ITEM':
+            return [
+                ...state,
+                action.item
+            ]
+        default:
+            return state;
+    }
+}
+
+var reducer = combineReducers({ items: itemsReducer })
+var store_0 = createStore(reducer)
+
+store_0.subscribe(function() {
+    store_0.getState());
+    // 在这里更新你的视图
 })
+
+var addItemActionCreator = function (item) {
+    return {
+        type: 'ADD_ITEM',
+        item: item
+    }
+}
+store_0.dispatch(addItemActionCreator({ id: 1234, description: 'anything' }))
 ```
+如何取消订阅，究竟是怎么更新视图的，我们怎么吧Redux和React结合到一起？

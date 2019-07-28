@@ -93,7 +93,8 @@ module.exports = {
           title: 'Redux',
           collapsable: false,
           children: [
-            '/MVVM/React/Redux/'
+            '/MVVM/React/Redux/',
+            '/MVVM/React/Redux/Introduction.md'
           ]
         }
       ],
