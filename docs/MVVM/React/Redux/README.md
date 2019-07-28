@@ -448,3 +448,13 @@ var addItemActionCreator = function (item) {
 store_0.dispatch(addItemActionCreator({ id: 1234, description: 'anything' }))
 ```
 如何取消订阅，究竟是怎么更新视图的，我们怎么吧Redux和React结合到一起？
+使用 “provide” 和 “connect” 绑定，不必再关心隐含在内的订阅方法。
+
+
+## Provider-connect
+开发一个React应用和服务器来让浏览器可以访问，我们会用到：
+
+- node HTTP 创建一个非常简单的服务器
+- 用 webpack 去打包我们的应用
+- 神奇的 webpack Dev Server 
+- react hot loader
