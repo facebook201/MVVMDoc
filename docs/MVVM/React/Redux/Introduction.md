@@ -51,5 +51,3 @@ function todos(state = [], action) {
   }
 }
 ```
-
-## 
