@@ -27,8 +27,8 @@ module.exports = {
             link: '/MVVM/Vue/global/'
           },
           {
-            test: 'Vue的模板AST详解',
-            link: '/MVVM/Vue/AST/'
+            text: 'Vue组件开发',
+            link: '/MVVM/Vue/components/'
           }
         ]
       },
@@ -108,6 +108,15 @@ module.exports = {
           ]
         }
       ],
+      '/MVVM/Vue/components/': [
+        {
+          title: 'Vue组件设计',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/components/',
+          ]
+        }
+      ],
       '/MVVM/Vue/Code/': [
         {
           title: 'Vue源码',
@@ -123,7 +132,9 @@ module.exports = {
           title: 'React相关知识',
           collapsable: false,
           children: [
-            '/MVVM/React/basic/'
+            '/MVVM/React/basic/',
+            '/MVVM/React/basic/Advance.md',
+            '/MVVM/React/basic/error.md'
           ]
         }
       ],
