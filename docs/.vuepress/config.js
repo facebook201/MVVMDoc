@@ -29,6 +29,10 @@ module.exports = {
           {
             text: 'Vue组件开发',
             link: '/MVVM/Vue/components/'
+          },
+          {
+            text: 'Vue-Router源码',
+            link: '/MVVM/Vue/router/'
           }
         ]
       },
@@ -85,6 +89,15 @@ module.exports = {
             '/MVVM/Vue/basic/observe.md',
             '/MVVM/Vue/basic/initProps.md',
             '/MVVM/Vue/basic/parse.md'
+          ]
+        }
+      ],
+      '/MVVM/Vue/router/': [
+        {
+          title: 'router',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/router/'
           ]
         }
       ],
