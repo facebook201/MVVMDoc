@@ -1,4 +1,10 @@
-
+/*
+ * @Author: shiyao
+ * @Description: 
+ * @Date: 2019-08-19 10:07:26
+ * @param: 
+ * @return: 
+ */
 module.exports = {
   title: 'MVVM框架集',
   base: '/MVVMDoc/', // 设置站点根目录
@@ -29,6 +35,10 @@ module.exports = {
           {
             text: 'Vue组件开发',
             link: '/MVVM/Vue/components/'
+          },
+          {
+            text: 'Vue-router路由',
+            link: '/MVVM/Vue/router/'
           }
         ]
       },
@@ -50,11 +60,11 @@ module.exports = {
         ]
       },
       { 
-        text: '源码相关',
+        text: '组件原理',
         items: [
           {
-            text: '源码相关',
-            link: '/MVVM/SourceCode/'
+            text: '组件开发',
+            link: '/MVVM/Components/'
           }
         ]
       },
@@ -88,6 +98,16 @@ module.exports = {
           ]
         }
       ],
+      '/MVVM/Vue/router/': [
+        {
+          title: 'router',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/router/',
+            '/MVVM/Vue/router/install.md'
+          ]
+        }
+      ],
       '/MVVM/React/Redux/': [
         {
           title: 'Redux',
@@ -95,6 +115,15 @@ module.exports = {
           children: [
             '/MVVM/React/Redux/',
             '/MVVM/React/Redux/Introduction.md'
+          ]
+        }
+      ],
+      '/MVVM/Components/': [
+        {
+          title: '组件原理',
+          collapsable: false,
+          children: [
+            '/MVVM/Components/'
           ]
         }
       ],
@@ -133,8 +162,8 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/React/basic/',
-            '/MVVM/React/basic/Advance.md',
-            '/MVVM/React/basic/error.md'
+            '/MVVM/React/basic/basic.md',
+            '/MVVM/React/basic/Advance.md'
           ]
         }
       ],

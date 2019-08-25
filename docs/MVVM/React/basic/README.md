@@ -1,6 +1,3 @@
----
-pageClass: getting-started
----
 
 # React的设计思想
 
