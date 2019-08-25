@@ -37,7 +37,7 @@ module.exports = {
             link: '/MVVM/Vue/components/'
           },
           {
-            text: 'Vue-router路由',
+            text: 'Vue-Router源码',
             link: '/MVVM/Vue/router/'
           }
         ]
