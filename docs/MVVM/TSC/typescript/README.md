@@ -1,4 +1,4 @@
-# TypeScript
+# 基础
 
 ## 简介
 TypeScript 是 JavaScript类型的超集，可以编译成 JavaScript。可以在任何浏览器、任何操作系统上运行。
@@ -182,10 +182,16 @@ myFavoriteNumber = 7;
 console.log(myFavoriteNumber.length); // 编译时报错
 // index.ts(5,30): error TS2339: Property 'length' does not exist on type 'number'.
 ```
-## 对象类型
 
-### 接口 Interface
-在TS里面，除了可用于**对类的一部分行为进行抽象，常用于对象描述**
+## 接口 Interface
+**在typescript里面，使用接口来定义对象类型，** 接口是对行为的抽象，具体行动需要类去实现。
+
+* 接口首字母大写
+* 定义的变量不能比接口少，也不能多 **赋值的时候回要跟接口保持一致**
+* 可选属性 ?: 不需要完全匹配，但是不能添加未定义的属性
+* 任意属性 [propName: string]: any **任意属性定义了，那么确定属性和可选属性的类型都必须是它的子集**
+* 只读属性 readonly **只读属性约束在于第一次给对象赋值的时候，而不是第一次给只读属性赋值的时候**
+
 ```typescript
 interface Person {
   name: string,
@@ -305,15 +311,27 @@ let a = [];
 push(a, 1, 2, 3);
 ```
 
-## 进阶部分
+## 类型断言
+指定一个值的类型。 **TS可以允许你覆盖它的推断，并且能以你任何你想要的方式分析它。用它来告诉编译器你更了解这个类型**
 
-### 类型别名
-类型别名用来给一个类型起一个新名字。一般用于
+* <类型> 值  
+* 值 as 类型
+在jsx语法中必须是后一种。为了保持一致性，尽量都使用as。
+
 ```typescript
-type EventNames = 'click' | 'scroll' | 'mousemove';
-function handleEvent(ele: Element, event: EventNames) {
-  // do something
+const foo = {};
+// 这两种都是错误的，属性都不存在foo里面。因为ts推断出foo是一个对象。你不能添加属性
+foo.bar = 123;
+foo.bas = 'hello';
+
+interface Foo {
+  bar: number;
+  bas: string;
 }
-handleEvent(document.getElementById('hello'), 'scroll');  // 没问题
-handleEvent(document.getElementById('world'), 'dbclick'); // 报错，event 不能为 'dbclick'
+
+const foo = {} as Foo;
+foo.bar = 123;
+foo.bas = 'hello';
 ```
+
+

@@ -200,7 +200,8 @@ module.exports = {
           title: 'TypeScript',
           collapsable: false,
           children: [
-            '/MVVM/TSC/typescript/'
+            '/MVVM/TSC/typescript/',
+            '/MVVM/TSC/typescript/advanced.md'
           ]
         }
       ],
