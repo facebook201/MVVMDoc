@@ -26,5 +26,79 @@ TS可以使用三种访问修饰符。公有、私有和受保护的。
 ## 泛型(Generics)
 定义函数、接口、或类的时候。不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
 
+```typescript
+function createArray(length: number, value: any): Array<any> {
+  let result = [];
+
+  for (let i = 0; i < length; i++) {
+    result[i] = value;
+  }
+  return result;
+}
+
+createArray(2, 'x'); // ['x', 'x']
+```
+上面的函数的缺陷是，没有指定返回值得类型。
+
+```typescript
+function identity<T>(arg: T): T {
+  return arg;
+}
+// 这里的T位类型变量 表示类型而不是值。 T帮助用户捕捉输入的类型，之后就可以使用这个类型。使用T作为返回类型，
+// 就可以知道传入值和返回值是一个类型是相同的，这样就可以追踪函数里使用的类型的信息。就是泛型，可以适用多个类型
+// 不会丢失信息 保持准确性 传入数值类型并返回数值类型。
 
 
+// 传入所有参数
+let output = identity<string>('string');
+
+// 利用类型推断
+let output = identity('string');
+
+// 泛型接口
+interface genFn<T> {
+  (arg : T) : T;
+}
+
+let ide : genFn<number> = identity;
+
+// 泛型类
+// 泛型类指的是实例部分的类型，所以类的静态属性不能使用这个泛型类型。
+class Gen<T> {
+  zero: T;
+  add: (x: T, y: T) => T;
+}
+
+let gen = new Gen<number>();
+
+// 泛型约束
+// 利用接口来描述约束条件，然后使用这个接口和extends关键字实现约束
+interface Lengthwise {
+    length: number;
+}
+
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+    console.log(arg.length);  // Now we know it has a .length property, so no more error
+    return arg;
+}
+// 这时的泛型函数被定义了约束，因此它不再是适用于任何类型。
+
+// 泛型约束中使用类型参数
+function getProperty(obj: T, key: K) {
+    return obj[key];
+}
+
+let x = { a: 1, b: 2, c: 3, d: 4 };
+
+getProperty(x, "a"); // okay
+getProperty(x, "m"); // error: Argument of type 'm' isn't assignable to 'a' | 'b' | 'c' | 'd'.
+
+// 泛型的默认值
+function createArray<T = string>(length: number, value: T): Array<T> {
+    let result: T[] = [];
+    for (let i = 0; i < length; i++) {
+        result[i] = value;
+    }
+    return result;
+}
+```
