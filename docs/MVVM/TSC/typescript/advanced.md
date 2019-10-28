@@ -102,3 +102,16 @@ function createArray<T = string>(length: number, value: T): Array<T> {
     return result;
 }
 ```
+
+## 枚举
+枚举（Enum）类型用于取值被限定在一定范围内的场景，比如一周只能有7天，颜色限定为红绿蓝等。
+
+```typescript
+enum Days { Sun, Mon, Tue, Wed, Thu, Fir, Sat };
+// 初始值为0 其余的成员会从0开始自动增长
+
+Days['Sun'] = 0;
+Days[0] = 'Sun';
+```
+
+
