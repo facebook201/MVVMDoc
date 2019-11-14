@@ -110,3 +110,46 @@ UserList(data.users, likesPerUser, updateUserLikes);
 ```
 现在我们向 FancyNameBox 传了多个不同的参数。这打破了我们的 memoization 因为我们每次只能存储一个值
 
+## 不可变性
+
+记录变化，如果对象可变 那么需要遍历整个对象树来比较每一个值。操作的复杂度很高，如果不可变性原则，每次返回一个新对象 只要判断这个新对象被替换了 就可以知道其中数据是改变了的
+
+```javascript
+const player = {
+  score: 1,
+  name: 'Jeff'
+};
+
+
+const newPlayer = Object.assign({}, player, { score: 2 }); 
+```
+
+> 判断何时重新渲染
+如果数据发生了变化，可以很方便的判断对象数据是否发生了改变，那么可以很好决定何时根据数据的改变重新渲染组件。尤其是
+纯组件 pure components 的时候。
+
+
+### 函数组件
+
+如果你的组件只包含一个render方法。没有state，那么可以写成函数组件。这样更简单。这个函数接收 props 作为参数，然后返回需要渲染的元素。函数组件写起来并不像 class 组件那么繁琐，很多组件都可以使用函数组件来写。
+
+```javascript
+// this.props 都改成props 函数记得去掉()
+function Square(props) {
+  return (
+    <button className="square" onClick={props.onClick}>
+      {props.value}
+    </button>
+  );
+}
+```
+
+### 选择一个 key
+
+每当一个列表重新渲染时，React 会根据每一项列表元素的 key 来检索上一次渲染时与每个 key 所匹配的列表项。如果 React 发现当前的列表有一个之前不存在的 key，那么就会创建出一个新的组件。如果 React 发现和之前对比少了一个 key，那么就会销毁之前对应的组件。如果一个组件的 key 发生了变化，这个组件会被销毁，然后使用新的 state 重新创建一份。
+
+key 是 React 中一个特殊的保留属性（还有一个是 ref，拥有更高级的特性）。当 React 元素被创建出来的时候，React 会提取出 key 属性，然后把 key 直接存储在返回的元素上。虽然 key 看起来好像是 props 中的一个，但是你不能通过 this.props.key 来获取 key。React 会通过 key 来自动判断哪些组件需要更新。组件是不能访问到它的 key 的。
+
+**组件的 key 值并不需要在全局都保证唯一，只需要在当前的同一级元素之前保证唯一即可。**
+
+### 函数
