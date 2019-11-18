@@ -60,11 +60,15 @@ module.exports = {
         ]
       },
       { 
-        text: '组件原理',
+        text: '数据库',
         items: [
           {
-            text: '组件开发',
-            link: '/MVVM/Components/'
+            text: 'MongoDB',
+            link: '/MVVM/MongoDB/'
+          },
+          {
+            text: 'Redis',
+            link: '/MVVM/Redis/'
           }
         ]
       },
