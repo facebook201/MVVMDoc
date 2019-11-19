@@ -155,4 +155,315 @@ this.setState((prevState, props) => ({
 }));
 ```
 
+### 如果两种setState的用法混淆使用
+
+
+```javascript
+function increment(state, props) {
+  return { count: state.count + 1 };
+}
+
+function incrementMultiple() {
+  this.setState(increment);
+  this.setState(increment);
+  this.setState({count: this.state.count + 1});
+  this.setState(increment);
+}
+```
+
+上面这样写前面两个是直接传函数参数，第二种。第三个是直接传一个对象。结果发现 传统式setState的存在，会把函数式setState积攒的效果清空。
+只要有一个传统式的setState调用，就把其他函数式setState调用给害了。
+
+
+## 事件处理
+
+React元素的事件处理和DOM元素的很相似。
+
+* React事件绑定命名采用驼峰写法
+* React阻止默认行为不能使用false方式，要明确使用 preventDefault()
+
+
+```javascript
+// e是一个合成事件 不需要担心兼容性问题
+function handleClick(e) {
+  e.preventDefault();
+}
+```
+
+JSX回调函数中的this，类的方法默认是不会绑定this。有两种方案来解决这个问题 ，
+一个是在初始化器里面使用bind，一个是使用箭头函数
+
+```jsx
+constructor(props) {
+  super(props);
+  
+  this.handleClick = this.handleClick.bind(this);
+}
+
+handleClick() {
+  // ...
+}
+
+// 1 
+<button onClick={this.handleClick}></button>
+
+// 2
+<button onClick={(e) => this.handleClick(e)}></button>
+
+// 函数组件 如果是一个函数组件 props不需要带上括号
+<button onClick={() => props.handleClick}></button>
+```
+
+### 事件添加参数
+
+参数e作为React事件对象将会被作为第二个参数进行传递。 **箭头函数的事件对象必须显式进行传递，如果bind的方式 事件对象以及更多的参数将会被隐式传递**
+
+```jsx
+<button onClick={(e) => this.deleteRow(id, e)}>Delete Row</button>
+<button onClick={this.deleteRow.bind(this, id)}>Delete Row</button>
+```
+
+**通过bind方式向监听函数传参，类组件中定义的监听函数，事件对象e要排在梭传递参数的后面。**
+
+```jsx
+class Popper extends React.Component{
+  constructor(){
+    super();
+    this.state = {name:'Hello world!'};
+  }
+   
+  preventPop(name, e){    //事件对象e要放在最后
+    e.preventDefault();
+  }
+    
+  render(){
+    return (
+      <div>
+        <p>hello</p>
+        {/* Pass params via bind() method. */}
+        <a href="https://reactjs.org" onClick={this.preventPop.bind(this,this.state.name)}>
+          Click
+        </a>
+      </div>
+    );
+  }
+}
+```
+
+###  阻止组件渲染
+
+极少数情况下，你可能希望隐藏组件，即使它被其他组件渲染，让render方法返回null，而不是它的渲染结果即可实现。
+```jsx
+function WarningBanner(props) {
+  if (!props.warn) {
+    return null;
+  }
+  return (
+    <div className="warning">
+      Warning!
+    </div>
+  );
+}
+
+class Page extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {showWarning: true}
+    this.handleToggleClick = this.handleToggleClick.bind(this);
+  }
+
+  handleToggleClick(e) {
+    console.log(e);
+    this.setState(prevState => ({
+      showWarning: !prevState.showWarning
+    }));
+  }
+
+  render() {
+    return (
+      <div>
+        <WarningBanner warn={this.state.showWarning} />
+        <button onClick={this.handleToggleClick}>
+          {this.state.showWarning ? 'Hide' : 'Show'}
+        </button>
+      </div>
+    );
+  }
+}
+```
+
+## 列表和keys
+
+使用map函数来渲染多个组件。同时要给数组的每个元素赋予一个确定的标识，就是key。一般使用唯一的id来当做这个key，不建议使用索引当这个index。
+
+### 用keys提取组件
+
+元素的key只有在它和它的兄弟节点对比时才有意义。应该尽量提取出一个ListItem组件，把key保存在数组中的这个组件元素上。而不是放在ListItem组件中的 li 元素上。
+
+```jsx
+// 错误示例
+function ListItem(props) {
+  const value = props.value;
+  return (
+    // 错啦！你不需要在这里指定key:
+    <li key={value.toString()}>
+      {value}
+    </li>
+  );
+}
+
+// 正确示例
+function ListItem(props) {
+  // 对啦！这里不需要指定key:
+  return <li>{props.value}</li>;
+}
+
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) =>
+    // 对啦！key应该在数组的上下文中被指定
+    <ListItem key={number.toString()}
+              value={number} />
+
+  );
+  return (
+    <ul>
+      {listItems}
+    </ul>
+  );
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById('root')
+);
+```
+
+### jsx中嵌入 map
+```jsx
+// 可以这样写
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) => <ListItem key={number.toString()} value={number} />);
+  return (
+    <ul>
+      {listItems}
+    </ul>
+  );
+}
+
+// 也可以这样写
+function NumberList(props) {
+  const numbers = props.numbers;
+  return (
+    <ul>
+      {
+        numbers.map((number) => <ListItem key={number.toString()} value={number} />)
+      }
+    </ul>
+  );
+}
+```
+怎么实现取决于你自己，但是如果嵌套太多的话，就到了需要提取出组件的时机了。
+
+## 受控组件和非受控组件
+
+:::tip 受控组件和非受控组件
+input的value值必须是我们设置在constructor构造函数的state中的值，然后通过onChange触发事件来改变state中保存的value值，这样形成一个循环的回路影响，
+React负责渲染表单的组件仍然控制用户后续输入时所发生的变化。 这种称之为受控组件。
+
+非受控也就意味着我可以不需要设置它的state属性，而通过ref来操作真实的DOM。
+:::
+
+### 受控组件
+
+* 表单的状态发生变化 会被写入到组件的state中
+* 受控组件渲染出的状态与它的value或checked prop相对应
+* react受控组件更新 state 的流程
+  * 通过在初始state中设置表单的默认值
+  * 每当表单的值发生变化时，调用onChange事件处理器
+  * 事件处理器通过合成对象e拿到改变后的状态 更新应用的state
+  * setState触发视图的重新渲染 完成表单组件之的更新
+
+* 使用受控组件需要为每一个组件绑定一个change事件 定义事件处理器来同步表单之和组件的状态
+  * 文本框 => event.target.value
+  * 多选框 => event.target.checked
+  * 文本域 => event.target.value
+  * 下拉框 => event.target.value
+
+
+```javascript
+class NameForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { value: '' };
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({
+      value: event.target.value
+    });
+  }
+
+  render() {
+    return (
+      <form>
+        <label>
+          Name：
+          <input type="text" value={this.state.value} onChange={this.handleChange} />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    );
+  }
+}
+```
+
+### 多个输入的解决方法
+当有多个受控的input元素时，你可以通过给每个元素添加一个name属性，来让处理函数数据 event.target.name 值来选择做什么。
+可以见 React官网 表单一章
+
+### 非受控
+像file input标签 的value属性是只读的。所以它是React中的一个非受控组件。让表单数据由DOM处理，替代方案为使用非受控
+
+* 一个表单组件没有value prop就可以称为 非受控组件
+* 非受控组件是一种反模式，它的值不受组件自身的state或props控制
+* 通常需要为其添加 ref prop来访问渲染后的底层DOM元素
+* 可以通过添加defaultValue指定value值
+
+
+
+
+## 组合和继承
+React 具有强大的组合模型，建议使用组合而不是继承来复用组件之间的代码。
+
+### 包含关系
+一些组件不能提前知道子组件是什么，这对于Sidebar 和 Dialog 这类容器组件很常见。这样可以使用children属性将子元素直接传递到输出。
+这样还可以嵌套JSX来传递子组件。（有点像Vue的插槽）
+
+官网有一个例子 FancyBorder 组件里面有一个 props.children。FancyBorder JSX标签内的任何内容都将通过children属性传入。
+有时候如果需要在组件中有多个入口，这种情况下你可以使用自己约定的属性，而不是children。可以好好的敲一下官网的例子来熟悉组合
+
+
+
+```jsx
+function SplitPane(props) {
+  return (
+    <div className="splitpane">
+      <div className="split-left">
+        { props.left }
+      </div>
+      <div className="splitpane-right">
+        { props.right }
+      </div>
+    </div>
+  );
+}
+
+<SplitPane left={<Contacts />} right={<Chat />} />
+```
+
+
 
