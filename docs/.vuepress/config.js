@@ -56,6 +56,10 @@ module.exports = {
           {
             text: 'Redux',
             link: '/MVVM/React/Redux/'
+          },
+          {
+            text: 'React的相关问题',
+            link: '/MVVM/React/ReactQS/'
           }
         ]
       },
@@ -122,6 +126,15 @@ module.exports = {
           ]
         }
       ],
+      '/MVVM/React/ReactQS/': [
+        {
+          title: 'React相关问题',
+          collapsable: false,
+          children: [
+            '/MVVM/React/ReactQS/React.md',
+          ]
+        }
+      ],
       '/MVVM/Components/': [
         {
           title: '组件原理',
@@ -167,7 +180,8 @@ module.exports = {
           children: [
             '/MVVM/React/basic/',
             '/MVVM/React/basic/basic.md',
-            '/MVVM/React/basic/Advance.md'
+            '/MVVM/React/basic/Advance.md',
+            '/MVVM/React/basic/article.md'
           ]
         }
       ],
