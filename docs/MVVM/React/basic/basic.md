@@ -433,6 +433,55 @@ class NameForm extends React.Component {
 * 通常需要为其添加 ref prop来访问渲染后的底层DOM元素
 * 可以通过添加defaultValue指定value值
 
+非受控组件将真实数据保存在DOM中，更容易同时集成 React 和 非React代码。
+
+### 默认值 
+如果你希望React可以为其指定初始值，但不再控制后续更新。可以指定一个defaultValue属性而不是value
+
+```jsx
+render() {
+  return (
+    <form onSubmit={this.handleSubmit}>
+      <label>
+        Name:
+        <input
+          defaultValue="Bob"
+          type="text"
+          ref={(input) => this.input = input} />
+      </label>
+      <input type="submit" value="Submit" />
+    </form>
+  );
+}
+// 默认值 defaultValue 同样的 其他input可支持 defaultChecked 
+```
+
+### 文件输入标签
+<input type="file"> 始终是一个不受控制的组件，因为它的值只能由用户设置，而不是以编程方式设置。
+
+### 受控组件和非受控组件该如何选择
+
+这两个组件的区别就是在于组件内部的状态是否是全程受控的，受控组件的状态全程响应外部数据的变化，而非受控组件只是在初始化的时候接受外部数据，然后就自己在内部维护状态了。
+
+
+
+
+
+| 功能               | 非受控 | 受控 |
+| ------------------ | ------ | ---- |
+| 一次性收集数据     | √      | √    |
+| 提交时验证         | √      | √    |
+| 及时验证           | X      | √    |
+| 有条件的禁用提交   | X      | √    |
+| 强制控制输入的格式 | X      | √    |
+| 一个数据多个输入   | X      | √    |
+| 动态输入           | X      | √    |
+
+
+
+大致来说，当仅仅需要一次性收集数据，提交时菜需要验证，用两种方式都可以。
+但是，当业务中需要对数据进行即时校验，格式化输入数据等需求，就只能使用受控组件了。毕竟受控组件能力更强。
+
 
 
 
@@ -445,8 +494,6 @@ React 具有强大的组合模型，建议使用组合而不是继承来复用�
 
 官网有一个例子 FancyBorder 组件里面有一个 props.children。FancyBorder JSX标签内的任何内容都将通过children属性传入。
 有时候如果需要在组件中有多个入口，这种情况下你可以使用自己约定的属性，而不是children。可以好好的敲一下官网的例子来熟悉组合
-
-
 
 ```jsx
 function SplitPane(props) {
@@ -464,6 +511,26 @@ function SplitPane(props) {
 
 <SplitPane left={<Contacts />} right={<Chat />} />
 ```
+
+
+
+## 控制权限和React设计
+
+控制权在编程过程中是很重要的概念，我们希望轮子掌控的事情越多越好，这样**抽象层处理的逻辑越多，业务调用时关心的事情就越少，使用就越方便**
+
+
+
+
+
+React中受控组件表单等数据都是由React组件自己处理，而非受控组件是指表单的数据由DOM自己控制。**广义来说非受控组件是不含有内部states，只接受props的函数式组件或无状态组件** 它的渲染行为完全由外部传入的props控制，没有自身的 "自治权"。这样很好的实现了复用性，具有良好的测试性。
+
+
+
+在UI轮子设计中，不完全受控组件有时候是一个更好的选择。这里称为 control props模式。简单来说**组件具有自身state，当没有相关props传入时，使用自身状态state完成渲染和交互逻辑；当该组件被调用时，如果有相关props传入，那么就会交出控制权，由业务消费层面控制其行为**
+
+
+
+
 
 
 
