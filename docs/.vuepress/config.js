@@ -39,6 +39,14 @@ module.exports = {
           {
             text: 'Vue-Router源码',
             link: '/MVVM/Vue/router/'
+          },
+          {
+            text: 'Vue进阶知识',
+            link: '/MVVM/Vue/higher/',
+          },
+          {
+            text: 'Vue面试题',
+            link: '/MVVM/Vue/VueQS/',
           }
         ]
       },
@@ -122,6 +130,25 @@ module.exports = {
           children: [
             '/MVVM/Vue/router/',
             '/MVVM/Vue/router/install.md'
+          ]
+        }
+      ],
+      '/MVVM/Vue/higher/': [
+        {
+          title: 'Vue进阶知识',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/higher/',
+            '/MVVM/Vue/higher/'
+          ]
+        }
+      ],
+      '/MVVM/Vue/VueQS/': [
+        {
+          title: 'Vue面试题',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/VueQS/',
           ]
         }
       ],
