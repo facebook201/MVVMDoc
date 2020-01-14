@@ -71,18 +71,6 @@ class Gen<T> {
 
 let gen = new Gen<number>();
 
-// 泛型约束
-// 利用接口来描述约束条件，然后使用这个接口和extends关键字实现约束
-interface Lengthwise {
-    length: number;
-}
-
-function loggingIdentity<T extends Lengthwise>(arg: T): T {
-    console.log(arg.length);  // Now we know it has a .length property, so no more error
-    return arg;
-}
-// 这时的泛型函数被定义了约束，因此它不再是适用于任何类型。
-
 // 泛型约束中使用类型参数
 function getProperty(obj: T, key: K) {
     return obj[key];
@@ -102,6 +90,74 @@ function createArray<T = string>(length: number, value: T): Array<T> {
     return result;
 }
 ```
+
+### 泛型约束
+
+```typescript
+// 泛型约束
+// 利用接口来描述约束条件，然后使用这个接口和extends关键字实现约束
+interface Lengthwise {
+    length: number;
+}
+
+// 这时的泛型函数被定义了约束，因此它不再是适用于任何类型。
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+    console.log(arg.length);  // Now we know it has a .length property, so no more error
+    return arg;
+}
+
+
+// 确保K参数继承T 是T的属性
+function getProperty<T, K extends keyof T>(obj: T, key: K) {
+  return obj[key];
+}
+
+let x = {a: 1, b: 2, c: 3, d: 4};
+
+getProperty(x, 'a');
+getProperty(x, 'm');
+```
+
+## 交叉类型 (Intersection Types)
+
+**交叉类型是将多个类型合并成一个类型，这样合并后的类型可以使用所有类型的特性。**
+
+```typescript
+function extend<T, U>(first: T, second: U): T & U {
+  let result = {} as T & U;
+
+  for (let id in first) {
+    result[id] = first[id] as any;
+  }
+
+  for (let id in second) {
+    if (!result.hasOwnProperty(id)) {
+      result[id] = second[id] as any;
+    }
+  }
+  return result;
+}
+
+class Person {
+  public constructor(public name: string) {
+    this.name = name;
+  }
+}
+
+interface Loggable {
+  log(): void 
+}
+
+class ConsoleLogger implements Loggable {
+  log() {}
+}
+
+var jim = extend(new Person('jim'), new ConsoleLogger());
+
+jim.name;
+jim.log();
+```
+
 
 ## 枚举
 枚举（Enum）类型用于取值被限定在一定范围内的场景，比如一周只能有7天，颜色限定为红绿蓝等。
