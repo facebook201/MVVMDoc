@@ -76,7 +76,16 @@ module.exports = {
           }
         ]
       },
-      { 
+      {
+        text: '面试',
+        items: [
+          {
+            text: '面试题',
+            link: '/MVVM/InterviewQS/'
+          }
+        ]
+      },
+      {
         text: 'TypeScript',
         items: [
           {
@@ -131,7 +140,7 @@ module.exports = {
           title: 'React相关问题',
           collapsable: false,
           children: [
-            '/MVVM/React/ReactQS/React.md',
+            '/MVVM/React/ReactQS/',
           ]
         }
       ],
@@ -230,6 +239,16 @@ module.exports = {
           children: [
             '/MVVM/TSC/Axios/',
             '/MVVM/TSC/Axios/start.md'
+          ]
+        }
+      ],
+      // 面试
+      '/MVVM/InterviewQS/': [
+        {
+          title: '面试思考',
+          collapsable: false,
+          children: [
+            '/MVVM/InterviewQS/',
           ]
         }
       ]

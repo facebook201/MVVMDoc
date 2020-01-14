@@ -179,9 +179,15 @@ ref的值取决于节点的类型:
 不能在函数式组件上使用组件，因为函数组件没有实例。不过可以在函数内部使用，只要它指向一个DOM元素或者class组件。
 
 
-### strin的ref
+### string的ref
 
 定义ref为字符串的时候，需要React追踪当前正在渲染的组件，在reconciliation（协调）阶段，React Element 创建和更新的过程中，ref会被封装成一个闭包函数，ref会被封装成一个闭包函数，等待 commit 阶段被执行，这对性能有一些影响。
+
+## Refs 转发
+refs 转发是一项将ref自动地通过组件传递到其一子组件的技巧，对于大多数应用中的组件来说，这通常不是必需的。
+但其对某些组件，尤其是可重用的组件库是很有用的。
+
+#### 转发refs到DOM组件
 
 
 
@@ -196,8 +202,123 @@ React本身内部就用来巧妙的技术来最小化DOM操作，但是此外还
 
 
 
-
-
-
 ## Context
-一种无需为每层手动添加props，就能在组件树间进行数据传递的方法。
+
+
+## 错误边界
+错误边界是为了防止JavaScript 错误导致应用崩溃，引入的一个新的概念。它是一种React组件，这种组件**可以捕获并打印发生在其子组件树任何位置的错误，并且会渲染出备用UI**，而不是渲染那些崩溃了的子组件树。错误边界在渲染期间、生命周期方法和整个组件树的构造函数中捕获错误。
+
+:::warning 错误变量无法捕获以下场景中的错误
+* 事件处理
+* 异步代码（setTimeout、requestAnimationFrame的回调函数）
+* 服务端渲染
+* 自身抛出来的错误（并非它的子组件）
+:::
+
+
+
+## 高阶组件
+高阶组件（HOC）是React中复用组件逻辑的一种高级技巧。HOC自身不是React API的一部分，它是一种基于React的组合特性而形成的设计模式。
+
+**高阶组件是参数为组件，返回值是新组件的函数。** 简单说 高阶组件就是一个函数。
+```jsx
+const EnhancedComponent = higherOrderComponent(WrappedComponent);
+```
+组件是将 props 转换为 UI，而高阶组件是将组件转换为另一个组件。
+
+在大型应用中，我们需要把公共和可复用的逻辑抽象成一个组件，在多个组件之间共享。可以编写一个函数，接受一个子组件作为第一个参数，其他的参数用来辅助完成这个函数。
+
+```jsx
+// 官网例子
+
+// 这样使用 withSubscription 高阶组件函数 传一个组件 返回一个新的组件
+const CommentListWithSubscription = withSubscription(CommentList, (DataSource) => DataSource.getComments());
+
+const BlogPostWithSubscription = withSubscription(BlogPost, (DataSource, props) => DataSource.getBlogPost(props.id));
+
+
+// 此函数接收一个组件... 
+function withSubscription(WrappedComponent, selectData) {
+  // ...并返回另一个组件...
+  return class extends React.Component {
+    constructor(props) {
+      super(props);
+      this.handleChange = this.handleChange.bind(this);
+      this.state = {
+        data: selectData(DataSource, props)
+      };
+    }
+
+    componentDidMount() {
+      // ...负责订阅相关的操作...
+      DataSource.addChangeListener(this.handleChange);
+    }
+
+    componentWillUnmount() {
+      DataSource.removeChangeListener(this.handleChange);
+    }
+
+    handleChange() {
+      this.setState({
+        data: selectData(DataSource, this.props)
+      });
+    }
+
+    render() {
+      // ... 并使用新数据渲染被包装的组件!
+      // 请注意，我们可能还会传递其他属性
+      return <WrappedComponent data={this.state.data} {...this.props} />;
+    }
+  };
+}
+```
+
+**HOC不会修改传入的组件，也不会使用继承来复制其行为。相反，HOC通过将组件包装在容器组件中来组成新组件。HOC是纯函数，没有副作用。被包装组件接收来自容器组件的所有prop，同时也接收一个新的用于render的data prop。**
+
+
+### 将不相关的props传递给包裹的组件
+HOC应该透传与自身无关的Props。大多数HOC都应该包含一个类似于下面的render方法。
+
+```jsx
+render() {
+  // 过滤掉非此 HOC 额外的 props，且不要进行透传
+  const { extraProp, ...otherProps } = this.props;
+  // 将 props 注入到被包装的组件中
+  // 通常为 state 的值或者实例方法
+  const injectedProp = someStateOrInstanceMethod;
+
+  // 将props传递给包装组件
+  return (
+    <WrappedComponent
+      injectedProp={injectedProp}
+      {...otherProps} />
+  )
+}
+```
+
+### 注意事项
+
+
+#### 不要在render方法中使用 HOC
+React的 diff算法（称为协调）使用组件标识来确定它是应该跟新现有子树还是将其丢弃并挂载新子树，如果congrender返回的组件与前一个渲染中的组件相同，
+则react 通过将子树与新子树进行区分来递归更新子树。如果不相等 则完全卸载前一个子树。
+
+```jsx
+render() {
+  // 每次调用render函数 都会创建一个新的 EnhancedComponent
+  // EnhancedComponent1 !== EnhancedComponent2
+  const EnhancedComponent = enhance(MyComponent);
+
+  // 这将导致子树每次渲染都会进行卸载 和重新挂载的操作
+  return <EnhancedComponent />;
+}
+```
+重新挂载组件会导致该组件及其所有子组件的状态丢失。
+
+#### 复制静态方法
+
+有时在React组件上定义静态方法很有用。例如 Relay容器暴露了一个静态方法 getFragment 以方面组合 GraphQL片段。但是 当你将 HOC 应用于组件时，原始组件将使用容器组件进行包装。这意味着新组件没有原始组件的任何静态方法。
+
+
+
+
