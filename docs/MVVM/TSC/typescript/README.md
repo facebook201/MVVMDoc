@@ -1,10 +1,50 @@
 # 基础
 
 ## 简介
-TypeScript 是 JavaScript类型的超集，可以编译成 JavaScript。可以在任何浏览器、任何操作系统上运行。
+TypeScript 是 JavaScript类型的超集，可以编译成 JavaScript。可以定义类型，增强JavaScript、可以在任何浏览器、任何操作系统上运行。
+
+## TS能干什么
 
 * 支持ES6规范
 * 静态类型检查
+
+
+
+#### 低级错误检查
+
+```ts
+const people = [
+  { name: 'lisi', age: 20 },
+  { name: 'zhangsan' age: 24 }
+]
+
+const sortedPeople = people.sort((a, b) => a.name.localCompare(b.name));
+```
+
+像上面这种输入手误时有发生，如果没有编译器静态检查，那有可能就是一个字符引发的血案，引发一个隐藏的运行时bug。
+
+
+
+#### 非空判断
+
+```ts
+let data = {
+  list: null,
+  success: true
+};
+const value = data.list.length;
+```
+
+`data.list.length`这行直接引用了data.list的属性，但data.list的数据格式有不是数组的可能性，这种场景在前端处理后端接口返回时经常出现，接口返回的数据层级可能非常深，如果在某一级缺少了非空判断逻辑，那就意味着埋下了一个不知道什么时候就会引爆的炸弹。
+
+
+
+#### 访问权限控制 面向对象编程增强
+
+有时候 在某些类里面的某些属性 是protected类型，只能在自己类中或子类中使用。访问权限控制就很有用。能帮助我们做到信息隐藏。
+
+
+
 
 
 ## 组成部分

@@ -47,6 +47,10 @@ module.exports = {
           {
             text: 'Vue面试题',
             link: '/MVVM/Vue/VueQS/',
+          },
+          {
+            text: 'Vue好文',
+            link: '/MVVM/Vue/VueArticle/'
           }
         ]
       },
@@ -90,6 +94,10 @@ module.exports = {
           {
             text: '面试题',
             link: '/MVVM/InterviewQS/'
+          },
+          {
+            text: '面试引出的知识',
+            link: '/MVVM/QSK/'
           }
         ]
       },
@@ -139,7 +147,6 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/Vue/higher/',
-            '/MVVM/Vue/higher/'
           ]
         }
       ],
@@ -149,6 +156,15 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/Vue/VueQS/',
+          ]
+        }
+      ],
+      '/MVVM/Vue/VueArticle/': [
+        {
+          title: 'Vue好文',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/VueArticle/',
           ]
         }
       ],
@@ -276,6 +292,15 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/InterviewQS/',
+          ]
+        }
+      ],
+      '/MVVM/QSK/': [
+        {
+          title: '面试知识点',
+          collapsable: false,
+          children: [
+            '/MVVM/QSK/',
           ]
         }
       ]
