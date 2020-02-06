@@ -328,6 +328,16 @@ let tomcat = buildName('Tom', 'Cat');
 let tom = buildName('Tom');
 ```
 
+### 为函数定义类型
+```javascript
+function add(x: number, y: number): number {
+  return x + y;
+}
+
+// 完整的函数类型 其实在泛型那边也有这样的例子
+let myAdd: (x: number, y: number) => number = add;
+```
+
 ### 默认参数
 在ES6中 允许给函数的参数添加默认值，TypeScript 会将添加了默认值的参数识别为可选参数
 ```typescript
@@ -364,6 +374,78 @@ let mySearch: SearchFunc;
 mySearch = function(sourc: string, substring: string) {
   return sourc.search(substring) !== -1;
 }
+```
+
+### type 和 interface的区别
+
+相同点
+
+* 都能声明对象
+* 都能通过extends进行扩展
+
+```typescript
+// 通过interface声明对象结构
+// 通过interface声明对象结构
+interface A {
+  a: string;
+}
+// interface扩展另一个interface
+interface AA extends A {
+  b: number;
+}
+// 通过type声明对象结构
+type B = {
+  a: string;
+};
+// type扩展另一个type
+type BB = B & { b: number };// 通过interface声明对象结构
+interface A {
+  a: string;
+}
+// interface扩展另一个interface
+interface AA extends A {
+  b: number;
+}
+// 通过type声明对象结构
+type B = {
+  a: string;
+};
+// type扩展另一个type
+type BB = B & { b: number };
+```
+
+不同点
+
+* type能够声明别名 而 interface不行
+* interface 拥有声明合并的特性而type没有
+
+```typescript
+// 声明别名
+type isNumberOrBool = number | boolean;
+
+let a: isNumberOrBool = 1;
+a = true;
+```
+
+如果我们尝试两次声明同一个名称的接口，他们不但不会冲突，反而还会合并
+
+```typescript
+interface Bar {
+  a: string
+  b: number
+ }
+  
+ interface Bar {
+  c: string
+ }
+  
+ /*
+ 实际的Bar 接口为 {
+  a: string
+  b: number
+  c: string 
+ }
+ */
 ```
 
 

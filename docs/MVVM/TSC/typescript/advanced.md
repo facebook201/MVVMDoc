@@ -49,6 +49,11 @@ function identity<T>(arg: T): T {
 // 不会丢失信息 保持准确性 传入数值类型并返回数值类型。
 
 
+let myIdentity: <T>(arg: T) => T = identity;
+
+// <T>(arg: T) => T 作为整体，相当于 string，是对其左侧变量的约束。
+// <T>(arg: T) => T 与 function identity<T>(arg: T): T 中的后半部分其实是一个意思，约束了函数identity 的参数类型和返回值的类型
+
 // 传入所有参数
 let output = identity<string>('string');
 
