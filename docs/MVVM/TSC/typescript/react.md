@@ -85,7 +85,7 @@ class App extends React.Component<IProps, IState> {
 
 ### Promise 类型
 
-异步操作会经常使用到 async 函数。函数回调会return 一个 Promise 对象。 Promise<T> 是一个泛型类型， T 泛型变量用于确定使用 then方法时接收的第一个回调函数的参数类型。
+异步操作会经常使用到 async 函数。函数回调会return 一个 Promise 对象。 Promise\<T\> 是一个泛型类型， T 泛型变量用于确定使用 then方法时接收的第一个回调函数的参数类型。
 
 ```tsx
 // 定义接口响应数据
