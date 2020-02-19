@@ -383,6 +383,189 @@ axios拥有一个拦截器 interceptors 对象，该属性有 request和response
 resolve函数的参数，请求拦截器是 AxiosRequestConfig 类型的，而响应拦截器是AxiosResponse类型的，reject函数的参数是any类型的。
 
 
+```typescript
+export interface AxiosInterceptorManager<T> {
+  user(resolved: ResolvedFn<T>, rejected: RejectedFn): number
+
+  eject(id: number): void
+}
+
+export interface ResolvedFn<T> {
+  (val: T): T | Promise<T>
+}
+
+export interface RejectedFn {
+  val: any
+}
+
+// InterceptorManager 实例的里面保存的拦截器对象
+interface Interceptor<T> {
+  resolved: ResolvedFn<T>
+  rejected?: RejectedFn
+}
+
+/**
+ * axios.interceptor.response 和 request
+ */
+export default class InterceptorManager<T> {
+  // 这里因为要删除某个拦截器 所以加一个null 作为联合类型
+  private interceptors: Array<Interceptor<T> | null>
+
+  constructor() {
+    this.interceptors = [];
+  }
+
+  use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number {
+    this.interceptors.push({
+      resolved,
+      rejected
+    });
+    return this.interceptors.length - 1;
+  }
+
+  eject(id: number): void {
+    // 这里判断一下 是否存在 然后把某个拦截器至为null 这里不能使用splice删除 否则顺序id会乱掉
+    // 后面再循环拦截器数组的时候 会跳过null的值
+    if (this.interceptors[id]) {
+      this.interceptors[id] = null;
+    }
+  }
+
+  forEach(fn: (interceptor: Interceptor<T>) => void): void {
+    this.interceptors.forEach(interceptor => {
+      if (interceptor !== null) {
+        fn(interceptor);
+      }
+    });
+  }
+}
+```
+
+### 链式调用
+
+```typescript
+    const chain: PromiseChain<any>[] = [{
+      resolved: dispatchRequest,
+      rejected: undefined
+    }];
+
+    // 请求拦截器后添加的先执行
+    this.interceptors.request.forEach(interceptor => {
+      chain.unshift(interceptor)
+    });
+
+    // 相应拦截器先添加的先执行
+    this.interceptors.response.forEach(interceptor => {
+      chain.push(interceptor)
+    });
+
+    let promise = Promise.resolve(config);
+
+    while (chain.length) {
+      const { resolved, rejected } = chain.shift()!;
+      promise = promise.then(resolved, rejected);
+    }
+
+    return promise;
+```
 
 
+## 默认配置
 
+默认配置在发送请求时候有自己的一些默认行为，也可以合并用户传的配置。 在axios 上面加一个 defaults 属性，表示默认配置。你可以直接修改这些配置。
+
+```js
+axios.defaults.headers.common['test'] = '112'   
+
+const defaults: AxiosRequestConfig = {
+  method: 'get',
+
+  timeout: 0,
+
+  headers: {
+    common: {
+      Accept: 'application/json; text/plain, */*'
+    }
+  },
+
+  transformRequest: [
+    function(data: any, headers?: any): any {
+      processHeaders(headers, data);
+      return transformRequest(data);
+    }
+  ],
+
+  transformResponse: [
+    function(data: any): any {
+      return transformResponse(data);
+    }
+  ]
+};
+```
+
+### 创建新的实例
+目前上面的axios只是个单例，一旦修改了默认配置就会影响到所有的请求。希望可以实现一个创建实例的方法，来生成一个新的实例，传入自己的配置和默认配置做合并。axios.create();
+
+```typescript
+export interface AxiosInstance extends Axios {
+  <T = any>(config: AxiosRequestConfig): AxiosPromise<T>
+
+  <T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
+} 
+
+export interface AxiosStatic extends AxiosInstance {
+  create(config: AxiosRequestConfig): AxiosInstance
+}
+
+// 创建一个实例
+function createInstance(config: AxiosRequestConfig): AxiosStatic {
+  const contenxt = new Axios(config)
+  const instance = Axios.prototype.request.bind(contenxt)
+
+  extend(instance, contenxt)
+
+  return instance as AxiosStatic;
+}
+
+const axios = createInstance(defaults);
+
+axios.create = function create(config) {
+  // 合并默认参数和传进来的参数 这样就不需要去 axios.defaults 上面修改配置
+  return createInstance(mergeConfig(defaults, config));
+};
+```
+
+
+## 取消请求
+
+在有些极端的情况下，网络很差的时候，我们前一个请求还没有返回结果的时候，可能会存在下一个请求出去了。
+接口响应时长是不确定的，如果先发出去的请求，但是结果却比后发出去的请求慢，这样数据就乱了。所以这种情况需要保证后面的请求
+发出去之前确保前面的请求已经返回了结果，如果没有前面响应，需要取消后面的请求。
+
+
+### 异步分离
+
+要取消请求，我们需要为该请求配置一个 cancelToken，然后在外部调用一个 cancel 方法。
+
+请求的发送是一个异步过程，最终会执行 xhr.send方法，xhr 对象提供了abort方法，可以把请求取消，我们在外部碰不到 xhr对象，
+所以在执行cancel的时候 执行 xhr.abort 方法。
+
+可以利用 Promise 实现异步分离，也就是在 cancelToken 中保存一个 pending状态的 Promise 对象，然后当我们执行 cancel 方法的时候，
+能够访问到这个 Promise对象，把pending状态 改成 resolved状态，这样就可以在 then 函数中去实现取消请求的逻辑。
+
+```typescript
+
+```
+
+
+### withCredentials
+
+浏览器的同源策略限制有时候会出现跨越请求问题，一般来说主流的有两种方案。 CORS 和 代理。
+
+* CORS 对前端来说没什么工作量。每一次请求 浏览器会先以 OPTIONS 请求方式发送一个预请求（也不是所有请求都会发送options [详细](https://panjiachen.github.io/awesome-bookmarks/blog/cs.html#cors)）,通过预检请求从而获知服务器端对跨源请求支持的HTTP方法。在确认服务器允许该跨源请求后，再以实际的 HTTP 请求方法发送那个真正的请求。一次配好 多次使用。详细[MDN文档](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Access_control_CORS)
+
+* 纯前端的方法是代理。 dev开发模式下 可以使用webpack的 proxy 使用也是很方便，参照[文档](https://www.webpackjs.com/configuration/dev-server/#devserver-proxy)。在生产环境下 需要使用 nginx 反向代理。
+
+XMLHttpRequest.withCredentials  属性是一个Boolean类型，它指示了是否该使用类似cookies,authorization headers(头部授权)或者TLS客户端证书这一类资格证书来创建一个跨站点访问控制（cross-site Access-Control）请求。在同一个站点下使用withCredentials属性是无效的。
+
+** 不同域下的XmlHttpRequest 响应，不论其Access-Control- header 设置什么值，都无法为它自身站点设置cookie值，除非它在请求之前将withCredentials 设为true。**

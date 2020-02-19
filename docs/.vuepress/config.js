@@ -111,7 +111,8 @@ module.exports = {
           {
             text: 'TypeScript封装一个Axios',
             link: '/MVVM/TSC/Axios/'
-          }
+          },
+         
         ]
       },
     ],
@@ -271,7 +272,9 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/TSC/typescript/',
-            '/MVVM/TSC/typescript/advanced.md'
+            '/MVVM/TSC/typescript/advanced.md',
+            '/MVVM/TSC/typescript/higher.md',
+            '/MVVM/TSC/typescript/react.md'
           ]
         }
       ],
