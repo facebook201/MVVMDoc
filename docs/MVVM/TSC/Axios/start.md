@@ -569,3 +569,26 @@ axios.create = function create(config) {
 XMLHttpRequest.withCredentials  属性是一个Boolean类型，它指示了是否该使用类似cookies,authorization headers(头部授权)或者TLS客户端证书这一类资格证书来创建一个跨站点访问控制（cross-site Access-Control）请求。在同一个站点下使用withCredentials属性是无效的。
 
 ** 不同域下的XmlHttpRequest 响应，不论其Access-Control- header 设置什么值，都无法为它自身站点设置cookie值，除非它在请求之前将withCredentials 设为true。**
+
+
+
+### CSRF 跨站请求伪造。是一种挟持用户在当前已登录的 Web 应用程序上执行
+
+CSRF 利用用户的登录状态发起恶意请求。
+
+跨站伪造攻击，
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
