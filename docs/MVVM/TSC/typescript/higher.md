@@ -219,3 +219,27 @@ let person: Omit<Person, 'name'> = {
 ```tsx
 type NonNullable<T> = T extends null | undefined ? never : T;
 ```
+
+#### 交叉类型
+
+交叉类型是将多个类型合并为一个类型，可以把现有的多种类型叠加到一起成为一种类型，
+
+```typescript
+function mixin<T, U>(first: T, second: U): T & U {
+  const result = <T & U> {};
+  for (let id in first) {
+    (<T>result)[id] = first[id];
+  }
+
+  for (let id in second) {
+    if (!result.hasOwnProperty(id)) {
+      (<U>result)[id] = second[id];
+    }
+  }
+  return result;
+}
+
+const x = mixin({ a: 'hello' }, { b: 42 });
+const a = x.a;
+const b = x.b;
+```
