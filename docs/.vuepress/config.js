@@ -244,7 +244,8 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/React/Router/',
-            '/MVVM/React/Router/Guides.md'
+            '/MVVM/React/Router/guides.md',
+            '/MVVM/React/Router/API.md'
           ]
         }
       ],
