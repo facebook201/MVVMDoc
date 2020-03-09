@@ -243,7 +243,8 @@ module.exports = {
           title: 'Router相关',
           collapsable: false,
           children: [
-            '/MVVM/React/Router/'
+            '/MVVM/React/Router/',
+            '/MVVM/React/Router/API.md'
           ]
         }
       ],
