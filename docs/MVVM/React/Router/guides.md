@@ -38,5 +38,25 @@ Link 组件是用来调转的，NavLink是一种特殊的 Link，当它的 prop 
 ### Redux Integration Redux 整合
 
 
+### 阻止更新
 
+通常情况下，React Router 和 Redux 可以一起工作，但是偶尔，应用在更在子路线火活动导航链接未更新时，应用程序可能不会更新。
+
+
+
+* 组件通过 redux 的 connect() 联系起来。 connect()(Comp);
+* 组件不是一个 路由组件，呈现方式不是这种 \<Route component={SomeConnectedThing} />
+
+问题在于Redux实现了shouldComponentUpdate，如果没有从路由器接收道具，则没有任何变化的迹象，可以使用 withRouter 包裹你的组件。
+
+```tsx
+// before
+export default connect(mapStateToProps)(Something)
+
+// after
+import { withRouter } from 'react-router-dom'
+export default withRouter(connect(mapStateToProps)(Something))
+```
+
+### Deep integration
 
