@@ -1,6 +1,11 @@
-# React 核心内容
+# Redux 核心内容
 
-React对象本身很简单 他就是一个javascript对象。
+## Redux 流程图
+
+![border](https://github.com/facebook201/MVVMDoc/blob/master/img/redux.jpg)
+
+Redux store 对象本身很简单 他就是一个javascript对象。
+
 ```javascript
 // State
 {

@@ -241,6 +241,144 @@ ReactDOM.render((
 
 ## 官方文档实例 V5
 
-
 ### 嵌套路由
+
+```tsx
+// 一级路由
+
+function NestingRouter() {
+  return (
+    <Router>
+      <div>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/topics">Topics</Link>
+          </li>
+        </ul>
+        <Switch>
+          <Route exact path="/">
+            <Home />
+          </Route>
+          <Route path="/topics">
+            <Topics />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
+  )
+}
+
+// 内层嵌套路由
+function Topics() {
+  // The `path` lets us build <Route> paths that are
+  // relative to the parent route, while the `url` lets
+  // us build relative links.
+  let { path, url } = useRouteMatch();
+  return (
+    <div>
+      <h2>Topics</h2>
+      <ul>
+        <li>
+          <Link to={`${url}/rendering`}>Rendering with React</Link>
+        </li>
+        <li>
+          <Link to={`${url}/components`}>Components</Link>
+        </li>
+        <li>
+          <Link to={`${url}/props-v-state`}>Props v. State</Link>
+        </li>
+      </ul>
+
+      <Switch>
+        <Route exact path={path}>
+          <h3>Please select a topic.</h3>
+        </Route>
+        <Route path={`${path}/:topicId`}>
+          <Topic />
+        </Route>
+      </Switch>
+    </div>
+  );
+}
+```
+
+### 重定向 Redirect组件
+
+有时候匹配一个路径，但可能这个路径 更希望指向一个新的展示页面，而不是原本路径匹配界面，比如404。
+
+```tsx
+// Redirect组件必须属性是 to 属性 表示重定向的新地址
+
+<Route path="/somepage" render={() => <Redirect to="/404">} />
+```
+
+### costom link 自定义链接
+
+自定义link一般是用来实现切换路由，
+
+* 1、导入相关模块，最后导入 useRouteMatch 判断路由是否激活
+* 2、创建函数式组件 创建自定义的 Link组件，useRouteMatch 监测当前路由是否激活。
+* 3、自定义使用，路由设定规则还是一样的
+
+```tsx
+// 导入自定义
+import {
+  BrowserRouter as Router,
+  Link,
+  Route,
+  Switch,
+  Redirect,
+  useRouteMatch
+} from 'react-router-dom';
+
+
+type CostomParams = {
+  to: string,
+  activeOnlyWhenExact: boolean,
+  label?: string
+};
+
+// 第二步定义自定义Link
+function CostomLink({ to, activeOnlyWhenExact, label }: CostomParams) {
+  let match = useRouteMatch({
+    path: to,
+    exact: activeOnlyWhenExact
+  });
+
+  return (
+    <div className={ match ? 'active' : ''}>
+      { match && '>' }
+      <Link to={to}>{ label }</Link>
+    </div>
+  );
+}
+
+export default function MyRouter() {
+  return (
+    <div>
+      <Router>
+        <Link to="/foodList"> 美食列表 </Link>
+        <Link to="/newList"> 新闻列表 </Link>
+        <CostomLink to="/MyComponet" label="关于我们" activeOnlyWhenExact />
+
+        <Switch>
+          <Route path="/foodList" component={FoodList} />
+          <Route path="/newsList" component={NewsList} />  
+          <Route path="/myComponent" component={MyComponent} />
+
+          <Redirect exact from="/" to="/newsList" />
+          <Route path="foodDetail" component={FoodDetail} />
+          <Route component={NotFound}></Route>
+        </Switch>
+      </Router>
+    </div>
+  );
+}
+```
+
+
+
 
