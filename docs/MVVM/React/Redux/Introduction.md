@@ -2,7 +2,7 @@
 
 ## Redux 流程图
 
-![border](https://github.com/facebook201/MVVMDoc/blob/master/img/redux.jpg)
+![border](https://raw.githubusercontent.com/facebook201/MVVMDoc/master/img/redux.jpg)
 
 Redux store 对象本身很简单 他就是一个javascript对象。
 

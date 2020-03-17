@@ -234,6 +234,7 @@ module.exports = {
             '/MVVM/React/basic/',
             '/MVVM/React/basic/basic.md',
             '/MVVM/React/basic/Advance.md',
+            '/MVVM/React/basic/Hooks.md',
             '/MVVM/React/basic/article.md'
           ]
         }
