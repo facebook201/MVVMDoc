@@ -175,7 +175,8 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/React/Redux/',
-            '/MVVM/React/Redux/Introduction.md'
+            '/MVVM/React/Redux/Introduction.md',
+            '/MVVM/React/Redux/Other.md'
           ]
         }
       ],
