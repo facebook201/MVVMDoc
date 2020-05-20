@@ -48,6 +48,30 @@
 函数组件没有this，不能分配或读取 this.state。可以直接在组件中调用 useState Hook。
 
 
+## Hook 规则
+
+React Hook 本质上是JavaScript函数。使用hooks 最好引入官方的 linter插件。
+
+### **在最顶层使用Hook**
+
+**不要在循环，条件或嵌套函数中调用 Hook **，确保在React 函数顶层调用。遵守这条规则，你就能确保 Hook 在每一次渲染中都按照同样的顺序被调用。这让 React 能够在多次的 useState 和 useEffect 调用之间保持 hook 状态的正确。
+
+```js
+// Eslint 配置
+{
+  "plugins": [
+    // ...
+    "react-hooks"
+  ],
+  "rules": {
+    // ...
+    "react-hooks/rules-of-hooks": "error", // 检查 Hook 的规则
+    "react-hooks/exhaustive-deps": "warn" // 检查 effect 的依赖
+  }
+}
+```
+
+
 
 #### 调用useState方法的时候做了什么
 定义了一个state变量，这个变量可以由我们随便定义。它跟类组件的state是一样的，但是这个变量不会在函数退出后消失。会被React保留。
