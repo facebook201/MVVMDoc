@@ -4,6 +4,20 @@
 
 ![border](https://raw.githubusercontent.com/facebook201/MVVMDoc/master/img/redux.jpg)
 
+
+
+
+
+### 流程
+
+* 构建 action，创建一个函数，然后返回一个对象，要携带 type属性
+* 构建 reducer，响应 action，通过纯函数处理数据 传回给store
+* 利用 createStore 构建 store，构建的时候传递写好的 reducer
+* 利用 store.subscribe() 注册监听
+* 利用 store.dispatch 发送一个action的时候就能触发监听，利用 store.getState() 拿到值
+
+
+
 Redux store 对象本身很简单 他就是一个javascript对象。
 
 ```javascript

@@ -92,6 +92,71 @@ React Hook 本质上是JavaScript函数。使用hooks 最好引入官方的 lint
 
 
 
-### Effect Hook
+## Effect Hook
 
-*Effect Hook* 可以让你在函数组件中执行副作用操作，数据获取，设置订阅以及手动更改 React 组件中的 DOM 都属于副作用。不管你知不知道这些操作，或是“副作用”这个名字，应该都在组件中使用过它们。
+**Effect Hook** 可以让你在函数组件中执行副作用操作，数据获取，设置订阅以及手动更改 React 组件中的 DOM 都属于副作用。不管你知不知道这些操作，或是“副作用”这个名字，应该都在组件中使用过它们。
+
+
+### effect执行清除
+
+一般添加和删除的操作联系比较紧密，所以 useEffect 设计是在同一个地方执行，**如果返回的是一个函数，React将会在执行清楚操作时候调用**
+
+```tsx
+import React, { useState, useEffect } from 'react';
+
+function FriendStatus(props) {
+  const [isOnline, setIsOnline] = useState(null);
+
+  useEffect(() => {
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+
+    ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
+    // Specify how to clean up after this effect:
+    return function cleanup() {
+      ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
+    };
+  });
+
+  if (isOnline === null) {
+    return 'Loading...';
+  }
+  return isOnline ? 'Online' : 'Offline';
+}
+```
+
+在 effect 中返回一个函数？这是 effect 可选的清除机制。每个 effect 都可以返回一个清除函数，这样可以将添加和移除订阅的逻辑放在一起。**React会在组件卸载的时候执行清除操作**
+
+
+### 跳过 Effect进行性能优化
+
+每次渲染后都执行清理或者执行 effect 可能会导致性能问题，在 class组件中，我们可以通过 componentDidUpdate 中添加对 prevProps 或 prevState 的比较逻辑解决：
+
+
+如果是 useEffect Hook API，如果某些特定值在两次重渲染之间没有发生变化，可以通知React跳过对effect的调用。传数组作为useEffect的第二个可选参数即可。
+
+```tsx
+componentDidUpdate(prevProps, prevState) {
+  if (prevState.count !== this.state.count) {
+    doucument.title = `You Clicked ${this.state.count} times`;
+  }
+}
+
+
+// Hooks
+useEffect(() => {
+  doucument.title = `You Clicked ${this.state.count} times`;
+}, [count]);
+
+useEffect(() => {
+  function handleStatusChange(status) {
+    setIsOnline(status.isOnline);
+  }
+
+  ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
+  return () => {
+    ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
+  };
+}, [props.friend.id]); // 仅在 props.friend.id 发生变化时，重新订阅
+```
