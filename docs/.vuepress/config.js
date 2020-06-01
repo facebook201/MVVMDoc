@@ -278,6 +278,7 @@ module.exports = {
             '/MVVM/TSC/typescript/',
             '/MVVM/TSC/typescript/advanced.md',
             '/MVVM/TSC/typescript/higher.md',
+            '/MVVM/TSC/typescript/restart.md',
             '/MVVM/TSC/typescript/react.md'
           ]
         }

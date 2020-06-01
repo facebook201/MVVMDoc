@@ -56,6 +56,14 @@ React Hook 本质上是JavaScript函数。使用hooks 最好引入官方的 lint
 
 **不要在循环，条件或嵌套函数中调用 Hook **，确保在React 函数顶层调用。遵守这条规则，你就能确保 Hook 在每一次渲染中都按照同样的顺序被调用。这让 React 能够在多次的 useState 和 useEffect 调用之间保持 hook 状态的正确。
 
+
+### 使用 React Hooks 之前的要求
+
+#### 1、必须完整的阅读一次 Hook的文档
+
+重点必看hooks: useState、useReducer、useEffect、useCallback、useMemo。Dan的《useEffect完全指南》衍良同学的《React Hooks完全上手指南》
+
+#### 2 工程引入 lint插件 开启规则
 ```js
 // Eslint 配置
 {
