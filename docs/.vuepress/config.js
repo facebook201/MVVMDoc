@@ -21,6 +21,15 @@ module.exports = {
   themeConfig: {
     editLinkText: '在 GitHub 上编辑此页',
     nav: [
+      {
+        text: 'Node',
+        items: [
+          {
+            text: 'Koa',
+            link: '/MVVM/Node/Koa/'
+          },
+        ]
+      },
       { 
         text: 'Vue',
         items: [
@@ -117,6 +126,15 @@ module.exports = {
       },
     ],
     sidebar: {
+      '/MVVM/Node/Koa/': [
+        {
+          title: 'Koa',
+          collapsable: false,
+          children: [
+            '/MVVM/Node/Koa/',
+          ]
+        }
+      ],
       '/MVVM/Vue/basic/': [
         {
           title: 'Vue源码',
