@@ -1,7 +1,7 @@
 # Hook
 
 
-> **Hook 明确了你可以不在编写类组件的情况下，使用state以及其他React特性。只要 Class组件能实现的，函数式组件 + Hookd 都能胜任**
+> **Hook 明确了你可以不在编写类组件的情况下，使用state以及其他React特性。只要 Class组件能实现的，函数式组件 + Hook 都能胜任**
 
 
 ## React 组件设计理念
@@ -17,6 +17,15 @@
 
 * 对于组件之间的数据共享问题，React 官方采用单向数据流
 * 有状态的组件复用，从开始的 createClass + Mixins，后来的 Class Component，后面又有 Render Props、Higher Order Component，再到现在的 Function Component + Hooks。
+
+
+
+### 函数组件的缺失问题
+
+* 函数组件是纯函数 利于组件复用和测试
+* 函数组件只是单纯的接收 props、绑定事件、返回jsx 本身是无状态的，所以还是依赖props传入的handle来响应数据的变更。所以函数组件不能脱离类组件。
+
+
 
 ### 高阶组件的问题
 
@@ -137,6 +146,8 @@ React Hook 本质上是JavaScript函数。使用hooks 最好引入官方的 lint
 
 
 
+
+
 ## Effect Hook
 
 **Effect Hook** 可以让你在函数组件中执行副作用操作，数据获取，设置订阅以及手动更改 React 组件中的 DOM 都属于副作用。不管你知不知道这些操作，或是“副作用”这个名字，应该都在组件中使用过它们。
@@ -189,40 +200,17 @@ useEffect(() => {
 
 
 
-**但是有个注意点就是，每次effect里面获取的props 和 state 都是特有的。而且注意 如果 我们传了依赖，要考虑到为什么要用到这个依赖，如果仅仅只在修改函数里面用到这个依赖，那么这个依赖很有可能是个“错误”的依赖，看这个例子**
-
-```jsx
-const Hooks = () => {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCount(count + 1)
-      // 这里的c是前一个count的值 这个函数的形式需要去掉第二个参数的依赖 count
-			setCount(c => c + 1);
-    }, 1000);
-    return () => clearInterval(id);
-  }, [count]);
-  
-  return (
-    <div>
-      Count: { count }
-    </div>
-  );
-}
-```
-
-这个例子是有 setCount中使用了 count，其实我们不需要用到这个 count。可以使用 setState函数形式来更改，但是这种能做的事情很受限制，所以如果有一个相互依赖的状态，就可以使用 useReducer。
-
-**当你想更新一个状态，并且这个状态更新依赖另一个状态的值时，就需要用useReducer来替换，类似于 setSomething(some => ....), reducer 可以让你把组件内发生了什么（actions）和状态如何响应并更新分开表述。**
 
 
 
-#### 把函数当做依赖去传
+
+#### useCallback | useMemo
 
 
 
-提高水准
+1、在组件内部，那些会成为其他useEffecr依赖项的方法，建议用useCallback包裹，
+
+2、如果函数会作为props传递给子组件，一定使用useCallback 包裹。
 
 
 
@@ -230,7 +218,7 @@ const Hooks = () => {
 
 
 
-### React
+
 
 
 
