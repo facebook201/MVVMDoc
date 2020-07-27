@@ -35,5 +35,20 @@ function infiniteLoop(): never {
 }
 ```
 
+### keyof 操作符
+
+keyof操作符可以用于获取某种类型的所有键（也是属性名的联合），其返回类型是联合类型。
+
+```ts
+const COLORS = {
+  red: 'red',
+  blue: 'blue'
+};
+
+type Colors = keyof typeof COLORS;
+
+let color: Colors; // 'red' 'blue' union type 生成一个联合类型
+```
+
 
   

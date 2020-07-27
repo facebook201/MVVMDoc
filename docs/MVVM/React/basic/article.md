@@ -46,8 +46,6 @@ class App extends React.Component {
 ### shouldComponentUpdate 和 PureComponent
 在React类组件中，可以利用 shouldComponentUpdate 或者 PureComponent来减少父组件更新而触发子组件的render，从而到达目的。shouldComponentUpdate来决定是否组件重新渲染，如果不希望组件重新渲染，返回false即可。
 
-
-
 ## React + TypeScript 配置
 
 
@@ -97,9 +95,11 @@ script:
 ```
 
 #### eslint
-因为是打算使用 TypeScript 来编写 react，所以要选择一款支持 TypeScript 的 lint 工具，最流行的支持 TypeScript 的 ESlint。yarn add eslint -D
+因为是打算使用 TypeScript 来编写 react，所以要选择一款支持 TypeScript 的 lint 工具，最流行的支持 TypeScript 的 ESlint。
 
 ```sh
+yarn add eslint -D
+
 # 调用eslint 自带的配置生成器
 npx eslint --init
 
@@ -144,11 +144,42 @@ yarn upgrade --latest
 }
 ```
 
+### dev server
+
+express + webpack devServer 相关中间件，实际上 webpack-dev-server 就是使用 express 以及一些 devServer 相关的中间件开发的。在这种方式下， 各种中间件直接暴露出来了，我们可以灵活配置各个中间件的选项。
+
+```sh
+# 本地安装开发依赖 typescript
+yarn add typescript -D
+```
 
 
+使用 babel 去编译 TypeScript，babel 在编译 TypeScript 代码是直接去掉 TypeScript 的类型，然后当成普通的 javascript 代码使用各种插件进行编译，tsc 并没有介入编译过程，因此 tsconfig.json 中很多选项例如 target 和 module 是没有用的。
+
+启用 isolatedModules 选项会在 babel 编译代码时提供一些额外的检查，esModuleInterop 这个选项是用来为了让没有 default 属性的模块也可以使用默认导入，举个简单的例子，如果这个选项没开启，那你导入 fs 模块只能像下面这样导入：
+
+```tsx
+import * as fs from 'fs';
+// 开启可以使用默认
+import fs from 'fs';
+```
 
 
+### 编译 TypeScript
+webpack 默认的模块化系统只支持 js 文件，对于其它类型的文件如 jsx, ts, tsx, vue 以及图片字体等文件类型，我们需要安装对应的 loader。对于 ts 文件，目前存在比较流行的方案有三种:
 
+* babel + @babel/preset-typescript
+* ts-loader
+* awesome-typescript-loader
+
+ babel 已经能够编译 TypeScript 我们就没必要再加一个 ts-loader, 需要指出的一点就是就是 babel 默认不会检查 TypeScript 的类型，后面 webpack 插件部分我们会通过配置 fork-ts-checker-webpack-plugin 来解决这个问题。
+
+
+### 使用 express 开发 devServer
+
+* 作为一个静态文件服务器，使用内存文件系统托管 webpack 编译出的 bundle
+* 如果文件被修改了，会延迟服务器的请求直到编译完成
+* 配合 webpack-hot-middleware 实现热更新功能
 
 
 

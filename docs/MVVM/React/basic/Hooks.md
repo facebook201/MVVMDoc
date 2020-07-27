@@ -39,6 +39,37 @@
 
 
 
+### 函数组件和类组件的区别
+
+**在类组件中 我们一般通过 this.props 来读取父组件传来的数据，props是不可变的数据，但是this是永远可变的，所以如果组件重新渲染 this.props 就会改变。**
+
+```jsx
+class ProfilePage extends React.Component {
+  showMessage = () => {
+    alert('Followed ' + this.props.user);
+  };
+
+  handleClick = () => {
+    setTimeout(this.showMessage, 3000);
+  };
+
+  render() {
+    return <button onClick={this.handleClick}>Follow</button>;
+  }
+}
+```
+
+如果我们父组件改变了user的值，那 定时器返回的数据可能是 ”错误的“。我们可以认为这是props在某个地方弄丢了，切断了this的联系。解决方法有两种：
+
+
+
+* 调用事件之前 读取 props.user，显示的传入到函数里（但是代码显得冗长 如果另一个地方也调用了 越来愈多的方法 会更加难以维护）
+* JavaScript 闭包来解决
+
+
+
+
+
 ## 动机 (为什么引入Hooks)
 
 * 在组件之间复用状态逻辑很难
@@ -84,19 +115,25 @@ React Hook 本质上是JavaScript函数。使用hooks 最好引入官方的 lint
 #### 调用useState方法的时候做了什么
 定义了一个state变量，这个变量可以由我们随便定义。它跟类组件的state是一样的，但是这个变量不会在函数退出后消失。会被React保留。
 
-
-
 #### useState 需要哪些参数？
 
 唯一的参数就是初始state。 需要几个变量就调用几次 useState。
-
-
 
 #### useState 方法的返回值是什么？
 
 当前state和更新state的函数。 需要成对获取它们。
 
 
+
+### 注意点
+
+函数式更新：如果新的state需要先前的state计算得到，那么可以将函数传递给setState。该函数接收先前的 state，返回一个更新后的的值。
+
+```jsx
+<button onClick={() => setCount(prevCount => prevCount + 1)}>增加</button>
+```
+
+ 如果你的更新函数返回值与当前 state 完全相同，则随后的重渲染会被完全跳过。
 
 
 
@@ -105,66 +142,129 @@ React Hook 本质上是JavaScript函数。使用hooks 最好引入官方的 lint
 **Effect Hook** 可以让你在函数组件中执行副作用操作，数据获取，设置订阅以及手动更改 React 组件中的 DOM 都属于副作用。不管你知不知道这些操作，或是“副作用”这个名字，应该都在组件中使用过它们。
 
 
-### effect执行清除
 
-一般添加和删除的操作联系比较紧密，所以 useEffect 设计是在同一个地方执行，**如果返回的是一个函数，React将会在执行清楚操作时候调用**
+* effect 每次更新渲染的时候都是一个不同的函数（**记住每一次更新渲染都有自己的所有**）—— 并且每个 effect函数 里面的props 和 state 都是那次属于自己的 特定渲染。effect也是渲染的一部分。
 
-```tsx
-import React, { useState, useEffect } from 'react';
+  **更新步骤 很重要**
 
-function FriendStatus(props) {
-  const [isOnline, setIsOnline] = useState(null);
+  *  React给一个初始的state状态
+  * 组件本身记住要渲染的内容 和 渲染之后 要调用 这个effect
+  * React 告诉浏览器 要给DOM添加一些东西
+  * 浏览器就绘制到页面上
+  * 最后就是 React 接收到UI界面绘制完成之后 就要运行 effect函数了
+
+
+
+#### 清除Effect 副作用 例如取消订阅
+
+如果你的effect返回一个函数，React将会在执行清除操作时调用它。
+
+```jsx
+useEffect(() => {
+ 	return () => {
+    ChatApi.unsubscribeFromFriendStatus(props.id, handleFunction);
+  } 
+});
+```
+
+
+
+如果有更新操作的时候，Effect 的步骤是
+
+* React 渲染 UI
+* 浏览器绘制。我们在屏幕上看到 新数据的 UI
+* React 清除老的 effect
+* React 运行新的 effect
+
+
+
+>*组件内的每一个函数（包括事件处理函数，effects，定时器或者API调用等等）会捕获定义它们的那次渲染中的props和state。*
+
+
+
+#### effect 副作用函数第二个参数 依赖 dependency
+
+* 如果是一个空数组 就只会在初次渲染执行一次
+* 如果有依赖项 当依赖项变化 effect会在渲染之后再次执行一次
+
+
+
+**但是有个注意点就是，每次effect里面获取的props 和 state 都是特有的。而且注意 如果 我们传了依赖，要考虑到为什么要用到这个依赖，如果仅仅只在修改函数里面用到这个依赖，那么这个依赖很有可能是个“错误”的依赖，看这个例子**
+
+```jsx
+const Hooks = () => {
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
-    function handleStatusChange(status) {
-      setIsOnline(status.isOnline);
-    }
-
-    ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
-    // Specify how to clean up after this effect:
-    return function cleanup() {
-      ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
-    };
-  });
-
-  if (isOnline === null) {
-    return 'Loading...';
-  }
-  return isOnline ? 'Online' : 'Offline';
+    const id = setInterval(() => {
+      setCount(count + 1)
+      // 这里的c是前一个count的值 这个函数的形式需要去掉第二个参数的依赖 count
+			setCount(c => c + 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [count]);
+  
+  return (
+    <div>
+      Count: { count }
+    </div>
+  );
 }
 ```
 
-在 effect 中返回一个函数？这是 effect 可选的清除机制。每个 effect 都可以返回一个清除函数，这样可以将添加和移除订阅的逻辑放在一起。**React会在组件卸载的时候执行清除操作**
+这个例子是有 setCount中使用了 count，其实我们不需要用到这个 count。可以使用 setState函数形式来更改，但是这种能做的事情很受限制，所以如果有一个相互依赖的状态，就可以使用 useReducer。
+
+**当你想更新一个状态，并且这个状态更新依赖另一个状态的值时，就需要用useReducer来替换，类似于 setSomething(some => ....), reducer 可以让你把组件内发生了什么（actions）和状态如何响应并更新分开表述。**
 
 
-### 跳过 Effect进行性能优化
 
-每次渲染后都执行清理或者执行 effect 可能会导致性能问题，在 class组件中，我们可以通过 componentDidUpdate 中添加对 prevProps 或 prevState 的比较逻辑解决：
-
-
-如果是 useEffect Hook API，如果某些特定值在两次重渲染之间没有发生变化，可以通知React跳过对effect的调用。传数组作为useEffect的第二个可选参数即可。
-
-```tsx
-componentDidUpdate(prevProps, prevState) {
-  if (prevState.count !== this.state.count) {
-    doucument.title = `You Clicked ${this.state.count} times`;
-  }
-}
+#### 把函数当做依赖去传
 
 
-// Hooks
-useEffect(() => {
-  doucument.title = `You Clicked ${this.state.count} times`;
-}, [count]);
 
-useEffect(() => {
-  function handleStatusChange(status) {
-    setIsOnline(status.isOnline);
-  }
+提高水准
 
-  ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
-  return () => {
-    ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
-  };
-}, [props.friend.id]); // 仅在 props.friend.id 发生变化时，重新订阅
-```
+
+
+
+
+
+
+### React
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
