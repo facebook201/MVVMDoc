@@ -1,8 +1,13 @@
 # React相关问题
 
-## setState
+## setState 更新状态？
 
+* 什么时候同步，什么时候异步？
 * setState方法调用，组件一定会重新渲染吗？
+
+**在React中，如果由React引发的事件处理（onClick引发的事件处理）调用setState不会同步更新，除此之外的setState调用会同步执行this.state**
+
+> 在React的setState函数实现中，会根据一个变量isBatchingUpdates判断是直接更新this.state还是放到队列中回头再说，而isBatchingUpdates默认是false，也就表示setState会同步更新this.state，但是，有一个函数batchedUpdates，这个函数会把isBatchingUpdates修改为true，而当React在调用事件处理函数之前就会调用这个batchedUpdates，造成的后果，就是由React控制的事件处理过程setState不会同步更新this.state。
 
 
 ## React为什么不建议用mixins
