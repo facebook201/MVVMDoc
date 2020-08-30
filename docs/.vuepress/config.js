@@ -60,6 +60,10 @@ module.exports = {
           {
             text: 'Vue好文',
             link: '/MVVM/Vue/VueArticle/'
+          },
+          {
+            text: 'Vue3',
+            link: '/MVVM/Vue/Vue3/'
           }
         ]
       },
@@ -132,6 +136,16 @@ module.exports = {
           collapsable: false,
           children: [
             '/MVVM/Node/Koa/',
+          ]
+        }
+      ],
+      '/MVVM/Vue/Vue3/': [
+        {
+          title: 'Vue3',
+          collapsable: false,
+          children: [
+            '/MVVM/Vue/Vue3/',
+            '/MVVM/Vue/Vue3/Vite.md'
           ]
         }
       ],
