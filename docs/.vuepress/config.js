@@ -81,6 +81,10 @@ module.exports = {
           {
             text: 'React的相关问题',
             link: '/MVVM/React/ReactQS/'
+          },
+          {
+            text: 'Hook',
+            link: '/MVVM/React/Hook/'
           }
         ]
       },
@@ -255,6 +259,15 @@ module.exports = {
             '/MVVM/React/basic/Advance.md',
             '/MVVM/React/basic/Hooks.md',
             '/MVVM/React/basic/article.md'
+          ]
+        }
+      ],
+      '/MVVM/React/Hook/': [
+        {
+          title: 'ReactHook',
+          collapsable: false,
+          children: [
+            '/MVVM/React/Hook/'
           ]
         }
       ],

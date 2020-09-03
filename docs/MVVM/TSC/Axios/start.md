@@ -374,7 +374,7 @@ axios.interceptors.response.use(function(response) {
 }, function(error) {
   return Promise.reject(error);
 });
-``` 
+```
 
 ### 拦截器管理类实现
 
@@ -441,6 +441,8 @@ export default class InterceptorManager<T> {
 }
 ```
 
+
+
 ### 链式调用
 
 ```typescript
@@ -467,6 +469,17 @@ export default class InterceptorManager<T> {
     }
 
     return promise;
+
+// 伪代码
+
+// config 是 用户配置和默认配置合并的
+var promise = Promise.resolve(config);
+promise.then('请求成功', '请求失败')
+.then('请求成功', '请求失败')
+.then(dispatchRequest, undefined)
+.then('响应成功', '响应失败')
+.then('响应成功', '响应失败')
+.then('业务处理')
 ```
 
 
@@ -536,11 +549,108 @@ axios.create = function create(config) {
 ```
 
 
+
+**dispatchRequest 最终处理axios 发起请求的函数，过程如下**
+
+1. 取消请求的处理和判断
+2. 处理 参数和默认参数
+3. 使用相对应的环境 adapter 发送请求(浏览器环境使用 XMLRequest 对象、Node 使用 http 对象)
+4. 返回后抛出取消请求 message，根据配置 transformData 转换 响应数据
+
 ## 取消请求
 
 在有些极端的情况下，网络很差的时候，我们前一个请求还没有返回结果的时候，可能会存在下一个请求出去了。
 接口响应时长是不确定的，如果先发出去的请求，但是结果却比后发出去的请求慢，这样数据就乱了。所以这种情况需要保证后面的请求
-发出去之前确保前面的请求已经返回了结果，如果没有前面响应，需要取消后面的请求。
+发出去之前确保前面的请求已经返回了结果，如果没有前面响应，需要取消后面的请求。使用 *cancel token* 取消请求
+
+
+
+```javascript
+// 取消的代码
+const CancelToken = axios.CancelToken;
+const source = CancelToken.source();
+
+axios.get('/user/12345', {
+  cancelToken: source.token
+}).catch(function(thrown) {
+  if (axios.isCancel(thrown)) {
+    console.log('Request canceled', thrown.message);
+  } else {
+     // 处理错误
+  }
+});
+
+axios.post('/user/12345', {
+  name: 'new name'
+}, {
+  cancelToken: source.token
+})
+
+// 取消请求（message 参数是可选的）
+source.cancel('Operation canceled by the user.');
+
+
+// 构造函数
+CancelToken.source = function source() {
+  var cancel;
+  var token = new CancelToken(function executor(c) {
+    cancel = c;
+  });
+  return {
+    token: token,
+    cancel: cancel
+  };
+};
+
+function CancelToken(executor) {
+  if (typeof executor !== "function") {
+    throw new TypeError("executor must be a function.");
+  }
+
+  var resolvePromise;
+  this.promise = new Promise(function promiseExecutor(resolve) {
+    resolvePromise = resolve;
+  });
+
+  var token = this;
+  executor(function cancel(message) {
+    if (token.reason) {
+      return;
+    }
+
+    token.reason = new Cancel(message);
+    resolvePromise(token.reason);
+  });
+}
+```
+
+根据构造函数可以知道 axios.CancelToken.source().token 最终拿到的实例下挂载了 promise 和 reason 两个属性，promise 属性是一个处于 pending 状态的 promise 实例，reason 是执行 cancel 方法后传入的 message。而 axios.CancelToken.source().cancel 是一个函数方法，负责判断是否执行，若未执行拿到 axios.CancelToken.source().token.promise 中 executor 的 resolve 参数，作为触发器，触发处于处于 pending 状态中的 promise 并且  传入的 message 挂载在 xios.CancelToken.source().token.reason 下。若有  已经挂载在 reason 下则返回防止反复触发。而这个 pending 状态的 promise 在 cancel 后又是怎么进入 axios 总体 promise 的 rejected 中呢。我们需要看看 adpater 中的处理：
+
+```javascript
+//如果有cancelToken
+if (config.cancelToken) {
+  config.cancelToken.promise.then(function onCanceled(cancel) {
+    if (!request) {
+      return;
+    }
+    //取消请求
+    request.abort();
+    //axios的promise进入rejected
+    reject(cancel);
+    // 清楚request请求对象
+    request = null;
+  });
+}
+
+```
+
+1、axios.CancelToken.source()返回一个对象，tokens 属性 CancelToken 类的实例，cancel 是 tokens 内部 promise 的 resove 触发器
+
+2、axios 的 config 接受了 CancelToken 类的实例
+
+3、当 cancel 触发处于 pending 中的 tokens.promise，取消请求，把 axios 的 promise 走向 rejected 状态
+
+
 
 
 ### 异步分离
@@ -556,6 +666,11 @@ axios.create = function create(config) {
 ```typescript
 
 ```
+
+#### 借用尼库桑的图
+
+![border](https://pic3.zhimg.com/v2-a35d475ecf0d4ad1029551214a70bca9_b.jpg)
+
 
 
 ### withCredentials

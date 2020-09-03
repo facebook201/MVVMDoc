@@ -173,4 +173,133 @@ key 是 React 中一个特殊的保留属性（还有一个是 ref，拥有更�
 
 **组件的 key 值并不需要在全局都保证唯一，只需要在当前的同一级元素之前保证唯一即可。**
 
-### 函数
+
+
+
+
+## React 16 架构
+
+### Fiber （Fiber 其实就是一段虚拟DOM）
+
+> Fiber 是React内部实现的一套 状态更新机制，支持不同任务的优先级，可中断恢复，并且恢复之后可以复用之前的中间状态，每个任务更新单元就是 React 元素对应的 Fiber节点
+
+
+
+在`React15`及以前，`Reconciler`采用递归的方式创建虚拟DOM，递归过程是不能中断的。如果组件树的层级很深，递归会占用线程很多时间，造成卡顿。
+
+为了解决这个问题，`React16`将**递归的无法中断的更新**重构为**异步的可中断更新**，由于曾经用于递归的**虚拟DOM**数据结构已经无法满足需要。于是，全新的`Fiber`架构应运而生。
+
+
+
+1、作为架构来说，之前`React15`的`Reconciler`采用递归的方式执行，数据保存在递归调用栈中，所以被称为`stack Reconciler`。`React16`的`Reconciler`基于`Fiber节点`实现，被称为`Fiber Reconciler`。
+
+
+
+2、作为静态的数据结构来说，每个`Fiber节点`对应一个`React element`，保存了该组件的类型（函数组件/类组件/原生组件...）、对应的DOM节点等信息。
+
+
+
+3、作为动态的工作单元来说，每个`Fiber节点`保存了本次更新中该组件改变的状态、要执行的工作（需要被删除/被插入页面中/被更新...
+
+
+
+#### Fiber节点的连接
+
+每个Fiber节点对应一个 元素，那么多个是怎么连接形成树的。
+
+```js
+// 指向父级 Fiber 节点
+this.return = null;
+// 指向子Fiber节点
+this.child = null
+// 右边第一个兄弟Fiber节点
+this.sibling = null;
+```
+
+
+
+#### 静态的数据结构
+
+```js
+// Fiber对应组件的类型 Function/Class/Host...
+this.tag = tag;
+// key属性
+this.key = key;
+// 大部分情况同type，某些情况不同，比如FunctionComponent使用React.memo包裹
+this.elementType = null;
+// 对于 FunctionComponent，指函数本身，对于ClassComponent，指class，对于HostComponent，指DOM节点tagName
+this.type = null;
+// Fiber对应的真实DOM节点
+this.stateNode = null;
+```
+
+
+
+#### 动态的工作单元
+
+```js
+// 保存本次更新造成的状态改变相关信息
+this.pendingProps = pendingProps;
+this.memoizedProps = null;
+this.updateQueue = null;
+this.memoizedState = null;
+this.dependencies = null;
+
+this.mode = mode;
+
+// 保存本次更新会造成的DOM操作
+this.effectTag = NoEffect;
+this.nextEffect = null;
+
+this.firstEffect = null;
+this.lastEffect = null;
+
+// 调度优先级相关
+this.lanes = NoLanes;
+this.childLanes = NoLanes;
+```
+
+
+
+### 双缓存
+
+**在内存中构建并直接替换，Fiber的构建和替换 对应着DOM树的创建与更新**
+
+在`React`中最多会同时存在两棵`Fiber树`。当前屏幕上显示内容对应的`Fiber树`称为`current Fiber树`，正在内存中构建的`Fiber树`称为`workInProgress Fiber树`。
+
+`current Fiber树`中的`Fiber节点`被称为`current fiber`，`workInProgress Fiber树`中的`Fiber节点`被称为`workInProgress fiber`，他们通过`alternate`属性连接。
+
+React`应用的根节点通过`current`指针在不同`Fiber树`的`rootFiber`间切换来实现`Fiber树`的切换。当`workInProgress Fiber树`构建完成交给`Renderer`渲染在页面上后，应用根节点的`current`指针指向`workInProgress Fiber树`，此时`workInProgress Fiber树`就变为`current Fiber树`。每次状态更新都会产生新的`workInProgress Fiber树`，通过`current`与`workInProgress`的替换，完成`DOM`更新。
+
+
+
+#### mount
+
+* 首次执行`ReactDOM.render`会创建`fiberRootNode`（源码中叫`fiberRoot`）和`rootFiber`。其中`fiberRootNode`是整个应用的根节点，`rootFiber`是`<App/>`所在组件树的根节点。（之所以要区分`fiberRootNode`与`rootFiber`，是因为在应用中我们可以多次调用`ReactDOM.render`渲染不同的组件树，他们会拥有不同的`rootFiber`。但是整个应用的根节点只有一个，那就是`fiberRootNode`）
+
+* `fiberRootNode`的`current`会指向当前页面上已渲染内容对应对`Fiber树`，被称为`current Fiber树`。但是 current Fiber树目前是空的，没有任何子树
+
+  
+
+## 深入理解JSX
+
+我们写JSX语法的时候，必须要引入react，虽然你可能并没有用到。因为最后会被编译成 React.createElement方法来创建虚拟DOM。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
