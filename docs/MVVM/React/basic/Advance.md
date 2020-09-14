@@ -321,13 +321,6 @@ render() {
 
 
 
-
-## Protals
-
-
-
-
-
 ## render Prop
 
 render prop 一种在 React 组件之间使用一个值为函数的 prop 在 React 组件间共享代码的简单技术。
@@ -346,22 +339,127 @@ render prop 一种在 React 组件之间使用一个值为函数的 prop 在 Rea
 
 
 
+## Diff 算法
 
 
 
+React 提到，即使最前沿的算法，将前后两棵树对比的复杂度是 O(n^3), n 是树中的元素。所以避免开销如此巨大，降低算法的复杂度，React 会对其进行做三个限制
+
+* **只对同级元素进行 diff，如果一个DOM 节点在前后两次更新中跨越了层级，那么React 不会尝试复用他**
+* **两个不同类型的元素会产生不同的树，如果元素 div 变成 p，React 会直接销毁 div 以及后面的子孙节点，重新创建 p节点**
+* **开发者通过key属性来暗示哪些子元素在不同的渲染下能保证稳定**
 
 
 
+### JS 模拟 DOM
+
+```javascript
+class Element {
+  tag: Node, // div
+  props: Props, // { class: name }
+  chilren: Array[], // [ element, 'text ]
+  key: string
+
+  constructor (tag, props, children, key) {
+    this.tag = tag;
+    this.props = prop;
+
+    if (Array.isArray(children)) {
+      this.chilren = children;
+    } else if (isString(children)) {
+      this.key = children;
+      this.chilren = null;
+    }
+    if (key) this.key = key;
+  }
+
+
+  render() {
+    let root = this._createElement(
+      this.tag,
+      this.props,
+      this.children,
+      this.key
+    );
+    document.body.appendChild(root);
+    return root;
+  }
+
+  create() {
+    return this._createElement(this.tag, this.props, this.children, this.key);
+  }
+
+  // 创建节点
+  _createElement(tag, props, child, key) {
+    // 通过tag 创建节点
+    let el = document.createElement(tag);
+    // 设置 节点属性
+    for (const key in props) {
+      if (props.hasOwnProperty(key)) {
+        const value = props[key];
+        el.setAttribute(key, value);
+      }
+    }
+    if (key) {
+      el.setAttribute('key', key);
+    }
+    if (child) {
+      // 递归添加子节点
+      child.forEach(element => {
+        let child;
+        if (element instanceof Element) {
+          child = this._createElement(element.tag, element.props, element.children, element.key);
+        } else {
+          child = document.createTextNode(element);
+        }
+        el.appendChild(child);
+      });
+    }
+    return el;
+  }
+}
+```
 
 
 
+### 如何判断两个对象之间的差异
+
+* **首先从上到下，左到右遍历对象，树的深度遍历，给每个节点添加索引。便于最后的渲染差异**
+* **一旦节点有子元素，就去判断子元素是否有不同**
 
 
 
+### Virtual DOM 算法实现 （树的递归）
 
 
 
+* 新的节点的 tagName 或者 key 和旧的不同，这种就需要替换旧的节点，并且也不需要遍历新旧节点的子元素。因为整个旧节点都被删除了。
 
+* 新的节点的 tagName 和 key 和旧的相同，开始遍历子树。
+* 没有新的节点 什么都不用做
+
+
+
+### 判断列表差异
+
+1. 遍历旧的节点列表，查看每个节点是否还存在于新的节点列表中
+2. 遍历新的节点列表，判断是否有新的节点
+3. 在第二步中同时判断节点是否有移动
+
+
+
+### 差异渲染
+
+1. 深度遍历树，将需要做变更操作的取出来
+2. 局部更新 DOM
+
+
+
+Virtual Dom 算法的实现也就是以下三步
+
+1. 通过 JS 来模拟创建 DOM 对象
+2. 判断两个对象的差异
+3. 渲染差异
 
 
 

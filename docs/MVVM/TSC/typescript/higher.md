@@ -36,7 +36,7 @@ type Obj = {
 **keyof 产生联合类型, in 则可以遍历枚举类型, 所以他们经常一起使用, 看下 Partial 源码,也是下面要说到的映射类型**
 
 ```tsx
-type partial<T> = { [P in key of T]?: T[P] };
+type partial<T> = { [P in keyof T]?: T[P] };
 ```
 
 ## 映射类型

@@ -31,8 +31,6 @@
 
 ## Vue3和2的区别
 
-
-
 * 2是 option API，3是 composition API（实现高内聚，通过函数来实现）
 
 

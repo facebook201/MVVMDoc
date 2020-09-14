@@ -245,7 +245,12 @@ let tom: Person = {
 ```
 定义了接口Person，**变量tom的类型是Person，这样tom要跟Person保持一致。不能多属性也不能少属性。必须保持一致**
 
+
+
+
+
 ### 可选属性
+
 有时候不要完全匹配一个形状。表示可用不存在这个属性，但是不能添加未定义的熟悉
 ```typescript
 interface Person {
@@ -378,10 +383,11 @@ mySearch = function(sourc: string, substring: string) {
 
 ### type 和 interface的区别
 
-相同点
+* 类型别名是为类型创建一个新的名称
 
-* 都能声明对象
-* 都能通过extends进行扩展
+* 接口主要是用来定义一个结构的类型，比如定义一个对象的类型，而类型别名可以是任意细粒度的类型定义
+
+* 类型别名不能被 extends和 implements（自己也不能 extends和 implements其它类型）。 因为 软件中的对象应该对于扩展是开放的，但是对于修改是封闭的，你应该尽量去使用接口代替类型别名。
 
 ```typescript
 // 通过interface声明对象结构
@@ -419,37 +425,25 @@ type BB = B & { b: number };
 * type能够声明别名 而 interface不行
 * interface 拥有声明合并的特性而type没有
 
-```typescript
-// 声明别名
-type isNumberOrBool = number | boolean;
 
-let a: isNumberOrBool = 1;
-a = true;
-```
 
-如果我们尝试两次声明同一个名称的接口，他们不但不会冲突，反而还会合并
+:::tip TIP
 
-```typescript
-interface Bar {
-  a: string
-  b: number
- }
-  
- interface Bar {
-  c: string
- }
-  
- /*
- 实际的Bar 接口为 {
-  a: string
-  b: number
-  c: string 
- }
- */
-```
+* 如果你需要使用类型注解的层次结构，使用接口
+* 给联合类型和交叉类型使用一个语义化的名称 类型别名是一个很好的选择
+
+:::
+
+
+
+
+
+
+
 
 
 ## 类型断言
+
 指定一个值的类型。 **TS可以允许你覆盖它的推断，并且能以你任何你想要的方式分析它。用它来告诉编译器你更了解这个类型**
 
 * <类型> 值  

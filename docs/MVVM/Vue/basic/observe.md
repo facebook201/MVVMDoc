@@ -419,6 +419,94 @@ if (!this.depIds.has(id)) {
 
 ## 深度观测的实现
 
+
+
 ## 计算属性的实现
+
+计算属性的初始化是 Vue 实例化初始阶段的 initState 函数里面。
+
+```javascript
+function initComputed(vm: Component, computed: Object) {
+  const watchers = vm._computedWatchers = Object.create(null);
+
+  const isSSR = isServerRendering()
+  
+  for (const key in computed) {
+    const userDef = computed[key];
+    const getter = typeof userDef === 'function' ? userDef : userDef.get;
+
+    if (!isSSR) {
+      watchers[key] = new watcher(
+        vm,
+        getter || noop,
+        noop,
+        computedWatcherOptions
+      )
+    }
+
+    if (!(key in vm)) {
+      defineComputed(vm, key, userDef);
+    }
+  }
+}
+
+
+function defineComputed (
+  target: any,
+  key: string,
+  userDef: Object | Function
+) {
+  // 如果不是 ssr 就需要缓存
+  const shouldCache = !isServerRendering();
+
+  if (typoef userDef === 'function') {
+    sharePropertyDefinition.get = shouldCache
+      ? createComputedGetter(key)
+      : userDef;
+    
+    sharePropertyDefinition.set = noop;
+  } else {
+    sharedPropertyDefinition.get = userDef.get
+      ? shouldCache && userDef.cache !== false
+        ? createComputedGetter(key)
+        : userDef.get
+      : noop
+    sharedPropertyDefinition.set = userDef.set
+      ? userDef.set
+      : noop
+  }
+
+  Object.defineProperty(target, key, sharePropertyDefinition);
+}
+
+
+function createComputedGetter (key) {
+  return function computedGetter () {
+    const watcher = this._computedWatchers && this._computedWatchers[key]
+
+    if (watcher) {
+      watcher.depend();
+      return watcher.evaluate();
+    }
+  }
+}
+```
+
+
+
+**计算属性本质上是一个 computed watcher，创建和被访问触发getter 以及依赖更新的过程，其实就是最新的计算属性的实现，希望计算属性最终计算的值发生变化才会触发渲染 watcher 重新渲染。**
+
+
+
+**侦听属性 watcher 适用于观测某个值的变化去完成一段复杂的业务逻辑。**
+
+
+
+
+
+
+
+
+
 
 
