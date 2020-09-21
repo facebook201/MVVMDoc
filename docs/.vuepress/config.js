@@ -87,8 +87,8 @@ module.exports = {
             link: '/MVVM/React/ReactQS/'
           },
           {
-            text: 'Hook',
-            link: '/MVVM/React/Hook/'
+            text: 'React源码理念',
+            link: '/MVVM/React/Code/'
           }
         ]
       },
@@ -276,12 +276,12 @@ module.exports = {
           ]
         }
       ],
-      '/MVVM/React/Hook/': [
+      '/MVVM/React/Code/': [
         {
-          title: 'ReactHook',
+          title: 'React源码',
           collapsable: false,
           children: [
-            '/MVVM/React/Hook/'
+            '/MVVM/React/Code/'
           ]
         }
       ],
