@@ -202,8 +202,6 @@ useEffect(() => {
 
 
 
-
-
 #### useCallback | useMemo
 
 
@@ -218,9 +216,71 @@ useEffect(() => {
 
 
 
+# 
+
+## Class 迁移到 Hooks
+
+### 生命周期方法对应 Hook
+
+* constructor 函数组件不需要构造函数。可以通过调用 useState 初始化 state。同事useState 接受一个函数作为参数更新
+
+* `getDerivedStateFromProps`：改为 [在渲染时](https://reactjs.bootcss.com/docs/hooks-faq.html#how-do-i-implement-getderivedstatefromprops) 安排一次更新。
+
+* `shouldComponentUpdate`：参考 React.memo
+
+* `render`：这是函数组件体本身。
+
+* `componentDidMount`, `componentDidUpdate`, `componentWillUnmount`：[`useEffect` Hook](https://reactjs.bootcss.com/docs/hooks-reference.html#useeffect) 可以表达所有这些(包括 [不那么](https://reactjs.bootcss.com/docs/hooks-faq.html#can-i-skip-an-effect-on-updates) [常见](https://reactjs.bootcss.com/docs/hooks-faq.html#can-i-run-an-effect-only-on-updates) 的场景)的组合。
+
+  
+
+### hooks 获取数据
+
+```tsx
+useEffect(() => {
+  let ignore = false
+  	async function fetchData() {
+      setIsLoading(true);
+      const ret = await axios();
+      if (!ignore) {
+        setData(ret.data);  
+        setIsLoading(false);
+      }
+    }
+  	fetchData();
+  return () => { ignore: false }
+}, [query]);
+```
 
 
 
+### 如何获取上一轮的 props 或 state ？
+
+```ts
+function usePrevious(value: any) {
+  const ref = React.useRef();
+  
+  React.useEffect(() => {
+    ref.current = value;
+  }, []);
+
+  return ref.current;
+}
+
+function Counter() {
+  const [count, setCount] = React.useState(0);
+  const prevCount = usePrevious(count);
+  return <h1>Now: {count}, before: {prevCount}</h1>;
+}
+```
+
+
+
+
+
+
+
+### 
 
 
 
